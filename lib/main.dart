@@ -1,5 +1,237 @@
 import 'package:flutter/material.dart';
 
+void main() {
+  runApp(GameApp());
+}
+
+class GameApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: '遊戲選擇',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: MainMenu(),
+    );
+  }
+}
+
+class MainMenu extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('選擇遊戲')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PyramidPokerMenu()),
+                );
+              },
+              child: Text('金字塔撲克牌'),
+            ),
+            // 未來可新增其他遊戲按鈕
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PyramidPokerMenu extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('金字塔撲克牌')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('遊戲教學'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('歡迎來到金字塔撲克牌遊戲！'),
+                          SizedBox(height: 10),
+                          Text('遊戲規則：'),
+                          Text('1. 翻開金字塔中的牌，並猜測母牌堆的下一張牌是否比它大或小。'),
+                          Text('2. 如果猜錯，將根據層數與懲罰規則進行懲罰。'),
+                          Text('3. 撞柱（相同數字）會加倍懲罰。'),
+                          Text('4. 遊戲結束時，統計懲罰杯數。'),
+                        ],
+                      ),
+                      actions: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('關閉'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              child: Text('遊戲教學'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => GameSettings()),
+                );
+              },
+              child: Text('設定參數'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PyramidPokerGame()),
+                );
+              },
+              child: Text('直接開始'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class GameSettings extends StatefulWidget {
+  @override
+  _GameSettingsState createState() => _GameSettingsState();
+}
+
+class _GameSettingsState extends State<GameSettings> {
+  double initialUnit = 1;
+  double layer1Multiplier = 4;
+  double layer2Multiplier = 3;
+  double layer3Multiplier = 2;
+  double layer4Multiplier = 1;
+  double tiePenalty = 2;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('設定參數')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('初始單位: ${initialUnit.toStringAsFixed(1)} 杯'),
+            Slider(
+              value: initialUnit,
+              min: 0.5,
+              max: 5,
+              divisions: 9,
+              label: initialUnit.toStringAsFixed(1),
+              onChanged: (value) {
+                setState(() {
+                  initialUnit = value;
+                });
+              },
+            ),
+            SizedBox(height: 20),
+            Text('第1層倍數: ${layer1Multiplier.toInt()}'),
+            Slider(
+              value: layer1Multiplier,
+              min: 1,
+              max: 10,
+              divisions: 9,
+              label: layer1Multiplier.toInt().toString(),
+              onChanged: (value) {
+                setState(() {
+                  layer1Multiplier = value;
+                });
+              },
+            ),
+            Text('第2層倍數: ${layer2Multiplier.toInt()}'),
+            Slider(
+              value: layer2Multiplier,
+              min: 1,
+              max: 10,
+              divisions: 9,
+              label: layer2Multiplier.toInt().toString(),
+              onChanged: (value) {
+                setState(() {
+                  layer2Multiplier = value;
+                });
+              },
+            ),
+            Text('第3層倍數: ${layer3Multiplier.toInt()}'),
+            Slider(
+              value: layer3Multiplier,
+              min: 1,
+              max: 10,
+              divisions: 9,
+              label: layer3Multiplier.toInt().toString(),
+              onChanged: (value) {
+                setState(() {
+                  layer3Multiplier = value;
+                });
+              },
+            ),
+            Text('第4層倍數: ${layer4Multiplier.toInt()}'),
+            Slider(
+              value: layer4Multiplier,
+              min: 1,
+              max: 10,
+              divisions: 9,
+              label: layer4Multiplier.toInt().toString(),
+              onChanged: (value) {
+                setState(() {
+                  layer4Multiplier = value;
+                });
+              },
+            ),
+            SizedBox(height: 20),
+            Text('撞柱懲罰: ${tiePenalty.toInt()} 倍'),
+            Slider(
+              value: tiePenalty,
+              min: 1,
+              max: 5,
+              divisions: 4,
+              label: tiePenalty.toInt().toString(),
+              onChanged: (value) {
+                setState(() {
+                  tiePenalty = value;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Text(
+          '懲罰杯數算法: 層數倍數 x 張牌數 x 初始單位 x 撞柱懲罰',
+          style: TextStyle(color: Colors.red, fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
+
+class PyramidPokerGame extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MyHomePage(title: '金字塔撲克牌'); // 直接進入遊戲頁面，無需彈出教學視窗
+  }
+}
+
 // 撲克牌花色
 enum Suit { spades, hearts, diamonds, clubs }
 
@@ -377,7 +609,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     } else {
                       result =
                           '失敗！你翻到的是 ${currentDeckCard!.rank}，比 $targetRank 小！';
-                      penalty = (4 - selectedLayer!) * 1 * 1; // 懲罰邏輯
+                      penalty = (4 - selectedLayer!) * 1; // 懲罰邏輯
                       penaltyExplain =
                           '懲罰 $penalty 杯: ${4 - selectedLayer!} (第${selectedLayer! + 1}層) x 1 (張牌) x 1 (初始單位)';
                     }
@@ -422,7 +654,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     } else {
                       result =
                           '失敗！你翻到的是 ${currentDeckCard!.rank}，比 $targetRank 大！';
-                      penalty = (4 - selectedLayer!) * 1 * 1; // 懲罰邏輯
+                      penalty = (4 - selectedLayer!) * 1; // 懲罰邏輯
                       penaltyExplain =
                           '懲罰 $penalty 杯: ${4 - selectedLayer!} (第${selectedLayer! + 1}層) x 1 (張牌) x 1 (初始單位)';
                     }
@@ -506,8 +738,4 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-}
-
-void main() {
-  runApp(MyApp());
 }
