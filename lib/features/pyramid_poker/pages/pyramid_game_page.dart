@@ -28,32 +28,49 @@ class _PyramidGamePageState extends State<PyramidGamePage> {
     gameLogic.settings = widget.settings;
   }
 
-  void _checkAndShowResultDialog() {
-    if (_isDialogShowing) return;
-    if (gameLogic.result.isEmpty) return;
-    if (gameLogic.currentDeckCard == null) return;
+  Future<void> _showResultDialog() async {
+    if (_isDialogShowing || gameLogic.result.isEmpty) {
+      return;
+    }
 
     _isDialogShowing = true;
 
-    showDialog(
+    await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (dialogContext) {
         return ResultDialog(
           result: gameLogic.result,
           penalty: gameLogic.penalty,
           penaltyExplain: gameLogic.penaltyExplain,
           onCover: () {
+            if (!mounted) {
+              return;
+            }
+
             setState(() {
               gameLogic.coverSelectedCardWithDeckCard();
             });
-            Navigator.pop(context);
+
+            Navigator.of(dialogContext).pop();
           },
         );
       },
-    ).then((_) {
-      _isDialogShowing = false;
+    );
+
+    _isDialogShowing = false;
+  }
+
+  Future<void> _handleGuess({required bool isBiggerGuess}) async {
+    setState(() {
+      if (isBiggerGuess) {
+        gameLogic.guessBigger();
+      } else {
+        gameLogic.guessSmaller();
+      }
     });
+
+    await _showResultDialog();
   }
 
   Widget _buildPyramid() {
@@ -72,7 +89,7 @@ class _PyramidGamePageState extends State<PyramidGamePage> {
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: Text(
-                    '${layerIndex + 1}層: ${gameLogic.settings.multiplierForLayer(layerIndex)}倍',
+                    'x${gameLogic.settings.multiplierForLayer(layerIndex)}',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -91,6 +108,10 @@ class _PyramidGamePageState extends State<PyramidGamePage> {
 
                   return PyramidCardWidget(
                     card: card,
+                    cardCount: gameLogic.pileCardCountFor(
+                      layerIndex,
+                      cardIndex,
+                    ),
                     onTap: () {
                       setState(() {
                         gameLogic.selectCard(layerIndex, cardIndex);
@@ -117,32 +138,20 @@ class _PyramidGamePageState extends State<PyramidGamePage> {
               gameLogic.pyramid.deck.isNotEmpty &&
               gameLogic.selectedLayer != null &&
               gameLogic.selectedIndex != null
-          ? () {
-              setState(() {
-                gameLogic.guessBigger();
-              });
-            }
+          ? () => _handleGuess(isBiggerGuess: true)
           : null,
       onGuessSmaller:
           gameLogic.canGuess &&
               gameLogic.pyramid.deck.isNotEmpty &&
               gameLogic.selectedLayer != null &&
               gameLogic.selectedIndex != null
-          ? () {
-              setState(() {
-                gameLogic.guessSmaller();
-              });
-            }
+          ? () => _handleGuess(isBiggerGuess: false)
           : null,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAndShowResultDialog();
-    });
-
     return Scaffold(
       appBar: AppBar(
         title: const Text(PyramidPokerStrings.gameTitle),
