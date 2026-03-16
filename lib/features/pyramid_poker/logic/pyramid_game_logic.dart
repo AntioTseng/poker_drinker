@@ -1,6 +1,7 @@
 import '../../../core/card_game/models/playing_card.dart';
 import '../models/pyramid.dart';
 import '../models/pyramid_settings.dart';
+import '../resources/strings.dart';
 
 class PyramidGameLogic {
   Pyramid pyramid;
@@ -132,25 +133,56 @@ class PyramidGameLogic {
     final int unit = settings.initialUnit.toInt();
     final int tieMultiplier = settings.tiePenalty.toInt();
     final int cardCount = selectedPileCardCount;
+    final String cupUnit = PyramidPokerStrings.get('cupUnit');
+    final int layerNumber = selectedLayer! + 1;
+    final String drawRank = currentDeckCard!.rankLabel;
 
     if (isTie) {
-      result = '撞柱！你翻到的是 ${currentDeckCard!.rankLabel}，與 $targetRank 相同！';
+      result = PyramidPokerStrings.format('tieResult', {
+        'draw': drawRank,
+        'target': targetRank,
+      });
       penalty = layerMultiplier * cardCount * unit * tieMultiplier;
-      penaltyExplain =
-          '懲罰 $penalty 杯: $layerMultiplier (第${selectedLayer! + 1}層倍數) x $cardCount (張牌) x $unit (初始單位) x $tieMultiplier (撞柱)';
+      penaltyExplain = PyramidPokerStrings.format('penaltyExplainTie', {
+        'penalty': penalty,
+        'cup': cupUnit,
+        'layerMultiplier': layerMultiplier,
+        'layer': layerNumber,
+        'cardCount': cardCount,
+        'unit': unit,
+        'tieMultiplier': tieMultiplier,
+      });
     } else if (guessResult) {
       result = isBiggerGuess
-          ? '成功！你翻到的是 ${currentDeckCard!.rankLabel}，比 $targetRank 大！'
-          : '成功！你翻到的是 ${currentDeckCard!.rankLabel}，比 $targetRank 小！';
+          ? PyramidPokerStrings.format('successHigherResult', {
+              'draw': drawRank,
+              'target': targetRank,
+            })
+          : PyramidPokerStrings.format('successLowerResult', {
+              'draw': drawRank,
+              'target': targetRank,
+            });
       penalty = 0;
       penaltyExplain = '';
     } else {
       result = isBiggerGuess
-          ? '失敗！你翻到的是 ${currentDeckCard!.rankLabel}，比 $targetRank 小！'
-          : '失敗！你翻到的是 ${currentDeckCard!.rankLabel}，比 $targetRank 大！';
+          ? PyramidPokerStrings.format('failHigherResult', {
+              'draw': drawRank,
+              'target': targetRank,
+            })
+          : PyramidPokerStrings.format('failLowerResult', {
+              'draw': drawRank,
+              'target': targetRank,
+            });
       penalty = layerMultiplier * cardCount * unit;
-      penaltyExplain =
-          '懲罰 $penalty 杯: $layerMultiplier (第${selectedLayer! + 1}層倍數) x $cardCount (張牌) x $unit (初始單位)';
+      penaltyExplain = PyramidPokerStrings.format('penaltyExplainNormal', {
+        'penalty': penalty,
+        'cup': cupUnit,
+        'layerMultiplier': layerMultiplier,
+        'layer': layerNumber,
+        'cardCount': cardCount,
+        'unit': unit,
+      });
     }
 
     canGuess = false;

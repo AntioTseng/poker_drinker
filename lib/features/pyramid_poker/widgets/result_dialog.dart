@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../resources/strings.dart';
+
 class ResultDialog extends StatelessWidget {
   final String result;
   final int penalty;
@@ -17,7 +19,7 @@ class ResultDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('結果'),
+      title: Text(PyramidPokerStrings.get('resultDialogTitle')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -26,7 +28,10 @@ class ResultDialog extends StatelessWidget {
             Column(
               children: [
                 Text(
-                  '懲罰：$penalty 杯',
+                  PyramidPokerStrings.format('penaltyLine', {
+                    'penalty': penalty,
+                    'cup': PyramidPokerStrings.get('cupUnit'),
+                  }),
                   style: const TextStyle(fontSize: 20, color: Colors.red),
                 ),
                 Text(
@@ -38,7 +43,10 @@ class ResultDialog extends StatelessWidget {
         ],
       ),
       actions: [
-        ElevatedButton(onPressed: onCover, child: const Text('覆蓋到當前子牌')),
+        ElevatedButton(
+          onPressed: onCover,
+          child: Text(PyramidPokerStrings.get('coverSelectedCardButton')),
+        ),
       ],
     );
   }

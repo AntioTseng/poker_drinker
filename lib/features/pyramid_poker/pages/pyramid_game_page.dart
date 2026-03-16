@@ -131,8 +131,16 @@ class _PyramidGamePageState extends State<PyramidGamePage> {
     final selectedCard = gameLogic.selectedCard;
 
     return GuessButtons(
-      biggerLabel: selectedCard != null ? '比${selectedCard.rank}大' : '比大',
-      smallerLabel: selectedCard != null ? '比${selectedCard.rank}小' : '比小',
+      biggerLabel: selectedCard != null
+          ? PyramidPokerStrings.format('guessHigherWithRank', {
+              'rank': selectedCard.rank.toString(),
+            })
+          : PyramidPokerStrings.get('guessHigher'),
+      smallerLabel: selectedCard != null
+          ? PyramidPokerStrings.format('guessLowerWithRank', {
+              'rank': selectedCard.rank.toString(),
+            })
+          : PyramidPokerStrings.get('guessLower'),
       onGuessBigger:
           gameLogic.canGuess &&
               gameLogic.pyramid.deck.isNotEmpty &&
@@ -154,7 +162,7 @@ class _PyramidGamePageState extends State<PyramidGamePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(PyramidPokerStrings.gameTitle),
+        title: Text(PyramidPokerStrings.get('gameTitle')),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
