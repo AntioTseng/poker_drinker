@@ -30,7 +30,7 @@
     "guessLowerWithRank": "Lower than {rank}",
     "resultDialogTitle": "Result",
     "penaltyLine": "Penalty: {penalty} {cup}",
-    "coverSelectedCardButton": "Cover selected card",
+    "coverSelectedCardButton": "Next",
     "tieResult": "Tie! You drew {draw}, same as {target}!",
     "successHigherResult": "Correct! You drew {draw}, higher than {target}!",
     "successLowerResult": "Correct! You drew {draw}, lower than {target}!",

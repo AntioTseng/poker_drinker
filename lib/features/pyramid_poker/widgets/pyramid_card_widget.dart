@@ -20,7 +20,11 @@ class PyramidCardWidget extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        PlayingCardWidget(card: card, onTap: onTap),
+        PlayingCardWidget(
+          card: card,
+          onTap: onTap,
+          flipDuration: const Duration(milliseconds: 250),
+        ),
         Positioned(
           top: 2,
           right: 2,

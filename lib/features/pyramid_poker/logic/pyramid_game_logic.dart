@@ -129,6 +129,7 @@ class PyramidGameLogic {
     }
 
     currentDeckCard = pyramid.deck.removeLast();
+    currentDeckCard!.isFaceUp = true;
 
     final int targetRank = pyramid.layers[selectedLayer!][selectedIndex!].rank;
     final bool isTie = currentDeckCard!.rank == targetRank;

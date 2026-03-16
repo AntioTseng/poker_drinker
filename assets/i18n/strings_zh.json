@@ -30,7 +30,7 @@
     "guessLowerWithRank": "比{rank}小",
     "resultDialogTitle": "結果",
     "penaltyLine": "懲罰：{penalty} {cup}",
-    "coverSelectedCardButton": "覆蓋到當前子牌",
+    "coverSelectedCardButton": "下一步",
     "tieResult": "撞柱！你翻到的是 {draw}，與 {target} 相同！",
     "successHigherResult": "成功！你翻到的是 {draw}，比 {target} 大！",
     "successLowerResult": "成功！你翻到的是 {draw}，比 {target} 小！",

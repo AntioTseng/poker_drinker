@@ -50,6 +50,22 @@ class _CardRenderDemoPageState extends State<CardRenderDemoPage> {
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
+            Text('翻牌動畫示範（點牌翻面）', style: textTheme.titleLarge),
+            const SizedBox(height: 12),
+            _FlipAnimationDemoRow(
+              cardLogicalSize: _cardLogicalSize,
+              faceUpCard: PlayingCard(
+                suit: Suit.spades,
+                rank: 1,
+                isFaceUp: true,
+              ),
+              faceDownCard: PlayingCard(
+                suit: Suit.spades,
+                rank: 1,
+                isFaceUp: false,
+              ),
+            ),
+            const SizedBox(height: 24),
             _RenderColumn(
               title: '目前版本（上下各一組角標）',
               cards: _sampleCards,
@@ -116,6 +132,201 @@ class _CardRenderDemoPageState extends State<CardRenderDemoPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _FlipAnimationDemoRow extends StatelessWidget {
+  final Size cardLogicalSize;
+  final PlayingCard faceUpCard;
+  final PlayingCard faceDownCard;
+
+  const _FlipAnimationDemoRow({
+    required this.cardLogicalSize,
+    required this.faceUpCard,
+    required this.faceDownCard,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    Widget cardFace(PlayingCard card) {
+      return SizedBox(
+        width: cardLogicalSize.width,
+        height: cardLogicalSize.height,
+        child: VectorPlayingCardWidget(
+          card: card,
+          layout: CardFaceLayout.centeredSuitThenRank,
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 16,
+      runSpacing: 16,
+      children: [
+        _FlipDemoItem(
+          title: '方案1：3D 翻牌\n250ms',
+          titleStyle: textTheme.bodyMedium,
+          child: _ThreeDFlipCard(
+            duration: const Duration(milliseconds: 250),
+            back: cardFace(faceDownCard),
+            front: cardFace(faceUpCard),
+          ),
+        ),
+        _FlipDemoItem(
+          title: '方案1：3D 翻牌\n400ms',
+          titleStyle: textTheme.bodyMedium,
+          child: _ThreeDFlipCard(
+            duration: const Duration(milliseconds: 400),
+            back: cardFace(faceDownCard),
+            front: cardFace(faceUpCard),
+          ),
+        ),
+        _FlipDemoItem(
+          title: '方案2：淡入淡出\n+ 縮放',
+          titleStyle: textTheme.bodyMedium,
+          child: _CrossFadeFlipCard(
+            duration: const Duration(milliseconds: 250),
+            back: cardFace(faceDownCard),
+            front: cardFace(faceUpCard),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FlipDemoItem extends StatelessWidget {
+  final String title;
+  final TextStyle? titleStyle;
+  final Widget child;
+
+  const _FlipDemoItem({
+    required this.title,
+    required this.titleStyle,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(title, style: titleStyle, textAlign: TextAlign.center),
+        const SizedBox(height: 8),
+        child,
+      ],
+    );
+  }
+}
+
+class _ThreeDFlipCard extends StatefulWidget {
+  final Duration duration;
+  final Widget back;
+  final Widget front;
+
+  const _ThreeDFlipCard({
+    required this.duration,
+    required this.back,
+    required this.front,
+  });
+
+  @override
+  State<_ThreeDFlipCard> createState() => _ThreeDFlipCardState();
+}
+
+class _ThreeDFlipCardState extends State<_ThreeDFlipCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: widget.duration,
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _toggle() {
+    if (_controller.status == AnimationStatus.completed) {
+      _controller.reverse();
+    } else if (_controller.status == AnimationStatus.dismissed) {
+      _controller.forward();
+    } else {
+      final bool goingForward = _controller.velocity >= 0;
+      if (goingForward) {
+        _controller.reverse();
+      } else {
+        _controller.forward();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _toggle,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          final double angle = _controller.value * math.pi;
+          final bool showFront = _controller.value >= 0.5;
+          final double displayAngle = showFront ? (angle - math.pi) : angle;
+
+          return Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.0015)
+              ..rotateY(displayAngle),
+            child: showFront ? widget.front : widget.back,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _CrossFadeFlipCard extends StatefulWidget {
+  final Duration duration;
+  final Widget back;
+  final Widget front;
+
+  const _CrossFadeFlipCard({
+    required this.duration,
+    required this.back,
+    required this.front,
+  });
+
+  @override
+  State<_CrossFadeFlipCard> createState() => _CrossFadeFlipCardState();
+}
+
+class _CrossFadeFlipCardState extends State<_CrossFadeFlipCard> {
+  bool _showFront = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => setState(() => _showFront = !_showFront),
+      child: AnimatedSwitcher(
+        duration: widget.duration,
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, animation) {
+          final fade = FadeTransition(opacity: animation, child: child);
+          final scale = ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1.0).animate(animation),
+            child: fade,
+          );
+          return scale;
+        },
+        child: _showFront
+            ? KeyedSubtree(key: const ValueKey('front'), child: widget.front)
+            : KeyedSubtree(key: const ValueKey('back'), child: widget.back),
       ),
     );
   }
