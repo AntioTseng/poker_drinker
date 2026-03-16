@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/i18n/app_locale.dart';
+import '../../dev/pages/card_render_demo_page.dart';
 import '../../pyramid_poker/resources/strings.dart';
 
 class AppSettingsPage extends StatelessWidget {
@@ -8,6 +9,12 @@ class AppSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var isDebug = false;
+    assert(() {
+      isDebug = true;
+      return true;
+    }());
+
     return Scaffold(
       appBar: AppBar(title: Text(PyramidPokerStrings.get('appSettingsTitle'))),
       body: ValueListenableBuilder<String>(
@@ -34,6 +41,20 @@ class AppSettingsPage extends StatelessWidget {
                   AppLocale.set(value);
                 },
               ),
+              if (isDebug) const Divider(),
+              if (isDebug)
+                ListTile(
+                  title: const Text('Card Render Demo'),
+                  subtitle: const Text('Vector vs sprite sheet rendering'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const CardRenderDemoPage(),
+                      ),
+                    );
+                  },
+                ),
             ],
           );
         },

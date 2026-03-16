@@ -4,7 +4,7 @@ import '../resources/strings.dart';
 
 class ResultDialog extends StatelessWidget {
   final String result;
-  final int penalty;
+  final double penalty;
   final String penaltyExplain;
   final VoidCallback onCover;
 
@@ -15,6 +15,13 @@ class ResultDialog extends StatelessWidget {
     required this.penaltyExplain,
     required this.onCover,
   });
+
+  String _formatNumber(double value) {
+    if (value == value.roundToDouble()) {
+      return value.toInt().toString();
+    }
+    return value.toStringAsFixed(1);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +36,7 @@ class ResultDialog extends StatelessWidget {
               children: [
                 Text(
                   PyramidPokerStrings.format('penaltyLine', {
-                    'penalty': penalty,
+                    'penalty': _formatNumber(penalty),
                     'cup': PyramidPokerStrings.get('cupUnit'),
                   }),
                   style: const TextStyle(fontSize: 20, color: Colors.red),

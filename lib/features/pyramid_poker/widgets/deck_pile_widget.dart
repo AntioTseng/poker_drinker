@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/card_game/models/playing_card.dart';
+import '../../../core/card_game/theme/card_palette.dart';
 import '../../../core/card_game/widgets/playing_card_widget.dart';
 
 class DeckPileWidget extends StatelessWidget {
@@ -25,8 +26,8 @@ class DeckPileWidget extends StatelessWidget {
               width: 50,
               height: 70,
               decoration: BoxDecoration(
-                color: Colors.blue,
-                border: Border.all(color: Colors.black),
+                color: CardPalette.cardBack,
+                border: Border.all(color: CardPalette.motherPile),
                 borderRadius: BorderRadius.circular(6),
               ),
             ),

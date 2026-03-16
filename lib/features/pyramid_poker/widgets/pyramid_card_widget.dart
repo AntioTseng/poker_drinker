@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/card_game/models/playing_card.dart';
+import '../../../core/card_game/theme/card_palette.dart';
 import '../../../core/card_game/widgets/playing_card_widget.dart';
 
 class PyramidCardWidget extends StatelessWidget {
@@ -26,7 +27,7 @@ class PyramidCardWidget extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.orange.shade700,
+              color: CardPalette.badge,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: Colors.white, width: 1),
             ),

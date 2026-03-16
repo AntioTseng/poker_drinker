@@ -9,7 +9,7 @@ class PyramidGameLogic {
   late List<List<int>> pileCardCounts;
 
   String result = '';
-  int penalty = 0;
+  double penalty = 0;
   String penaltyExplain = '';
   int? selectedLayer;
   int? selectedIndex;
@@ -39,6 +39,13 @@ class PyramidGameLogic {
     canFlipNextCard = true;
     currentDeckCard = null;
     canGuess = true;
+  }
+
+  static String _formatNumber(double value) {
+    if (value == value.roundToDouble()) {
+      return value.toInt().toString();
+    }
+    return value.toStringAsFixed(1);
   }
 
   List<List<int>> _createPileCardCounts() {
@@ -130,27 +137,29 @@ class PyramidGameLogic {
         : currentDeckCard!.rank < targetRank;
 
     final int layerMultiplier = settings.multiplierForLayer(selectedLayer!);
-    final int unit = settings.initialUnit.toInt();
-    final int tieMultiplier = settings.tiePenalty.toInt();
+    final double unit = settings.initialUnit;
+    final double tieMultiplier = settings.tiePenalty;
     final int cardCount = selectedPileCardCount;
     final String cupUnit = PyramidPokerStrings.get('cupUnit');
     final int layerNumber = selectedLayer! + 1;
     final String drawRank = currentDeckCard!.rankLabel;
+
+    final double basePenalty = layerMultiplier * cardCount * unit;
 
     if (isTie) {
       result = PyramidPokerStrings.format('tieResult', {
         'draw': drawRank,
         'target': targetRank,
       });
-      penalty = layerMultiplier * cardCount * unit * tieMultiplier;
+      penalty = basePenalty * tieMultiplier;
       penaltyExplain = PyramidPokerStrings.format('penaltyExplainTie', {
-        'penalty': penalty,
+        'penalty': _formatNumber(penalty),
         'cup': cupUnit,
         'layerMultiplier': layerMultiplier,
         'layer': layerNumber,
         'cardCount': cardCount,
-        'unit': unit,
-        'tieMultiplier': tieMultiplier,
+        'unit': _formatNumber(unit),
+        'tieMultiplier': _formatNumber(tieMultiplier),
       });
     } else if (guessResult) {
       result = isBiggerGuess
@@ -174,14 +183,14 @@ class PyramidGameLogic {
               'draw': drawRank,
               'target': targetRank,
             });
-      penalty = layerMultiplier * cardCount * unit;
+      penalty = basePenalty;
       penaltyExplain = PyramidPokerStrings.format('penaltyExplainNormal', {
-        'penalty': penalty,
+        'penalty': _formatNumber(penalty),
         'cup': cupUnit,
         'layerMultiplier': layerMultiplier,
         'layer': layerNumber,
         'cardCount': cardCount,
-        'unit': unit,
+        'unit': _formatNumber(unit),
       });
     }
 
