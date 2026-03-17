@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/card_game/models/playing_card.dart';
 import '../../../core/card_game/widgets/playing_card_widget.dart';
+import '../../../core/theme/app_theme.dart';
 import '../logic/pyramid_game_logic.dart';
 import '../models/pyramid_settings.dart';
 import '../resources/strings.dart';
@@ -33,12 +34,15 @@ class _PyramidGamePageState extends State<PyramidGamePage>
 
   static const double _cardWidth = 58;
   static const double _cardHeight = 78;
+  static const double _rowLabelWidth = 70;
+  static const double _pyramidAreaWidth = _cardWidth * 4;
+  static const double _deckAreaWidth = 96;
+  static const double _gameTableGap = 28;
 
   PlayingCard? _flyingDeckCard;
   Rect? _flyStartRect;
   Rect? _flyEndRect;
   AnimationController? _flyController;
-  Animation<double>? _flyAnimation;
 
   @override
   void initState() {
@@ -88,7 +92,6 @@ class _PyramidGamePageState extends State<PyramidGamePage>
       _flyEndRect = null;
       _flyController?.dispose();
       _flyController = null;
-      _flyAnimation = null;
     });
   }
 
@@ -200,10 +203,6 @@ class _PyramidGamePageState extends State<PyramidGamePage>
         vsync: this,
         duration: const Duration(milliseconds: 350),
       );
-      _flyAnimation = CurvedAnimation(
-        parent: _flyController!,
-        curve: Curves.easeInOut,
-      );
 
       setState(() {
         _isCoverAnimating = true;
@@ -232,7 +231,6 @@ class _PyramidGamePageState extends State<PyramidGamePage>
         _flyEndRect = null;
         _flyController?.dispose();
         _flyController = null;
-        _flyAnimation = null;
       });
 
       return true;
@@ -245,7 +243,6 @@ class _PyramidGamePageState extends State<PyramidGamePage>
           _flyEndRect = null;
           _flyController?.dispose();
           _flyController = null;
-          _flyAnimation = null;
         });
       }
       return false;
@@ -347,61 +344,141 @@ class _PyramidGamePageState extends State<PyramidGamePage>
     await _showResultDialog();
   }
 
+  Widget _buildMultiplierRailItem({
+    required int layerIndex,
+    required bool isFirst,
+    required bool isLast,
+  }) {
+    final multiplier = gameLogic.settings.multiplierForLayer(layerIndex);
+
+    return SizedBox(
+      width: _rowLabelWidth,
+      height: _cardHeight + 8,
+      child: Stack(
+        alignment: Alignment.centerRight,
+        children: [
+          Positioned(
+            left: 14,
+            top: isFirst ? (_cardHeight + 8) / 2 : 0,
+            bottom: isLast ? (_cardHeight + 8) / 2 : 0,
+            child: Container(
+              width: 2,
+              decoration: BoxDecoration(
+                color: AppTheme.secondaryAccent.withValues(alpha: 0.34),
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 8,
+            child: Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryAccent,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppTheme.pageBackground, width: 2),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x14000000),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            left: 20,
+            right: 10,
+            child: Container(
+              height: 2,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.secondaryAccent.withValues(alpha: 0.45),
+                    AppTheme.secondaryAccent.withValues(alpha: 0.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppTheme.panel,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: AppTheme.secondaryAccent.withValues(alpha: 0.22),
+                ),
+              ),
+              child: Text(
+                'x$multiplier',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: AppTheme.primaryAccent,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPyramid() {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: gameLogic.pyramid.layers.asMap().entries.map((entry) {
         final int layerIndex = entry.key;
         final List<PlayingCard> layer = entry.value;
+        final bool isFirst = layerIndex == 0;
+        final bool isLast = layerIndex == gameLogic.pyramid.layers.length - 1;
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              flex: 1,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 16.0),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    'x${gameLogic.settings.multiplierForLayer(layerIndex)}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildMultiplierRailItem(
+                layerIndex: layerIndex,
+                isFirst: isFirst,
+                isLast: isLast,
+              ),
+              SizedBox(
+                width: _pyramidAreaWidth,
+                child: SizedBox(
+                  key: _pyramidLayerRowKeys[layerIndex],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: layer.asMap().entries.map((cardEntry) {
+                      final int cardIndex = cardEntry.key;
+                      final PlayingCard card = cardEntry.value;
+
+                      return SizedBox(
+                        key: _pyramidCardKeys[layerIndex][cardIndex],
+                        child: PyramidCardWidget(
+                          card: card,
+                          cardCount: gameLogic.pileCardCountFor(
+                            layerIndex,
+                            cardIndex,
+                          ),
+                          onTap: () {
+                            setState(() {
+                              gameLogic.selectCard(layerIndex, cardIndex);
+                            });
+                          },
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              flex: 4,
-              child: SizedBox(
-                key: _pyramidLayerRowKeys[layerIndex],
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: layer.asMap().entries.map((cardEntry) {
-                    final int cardIndex = cardEntry.key;
-                    final PlayingCard card = cardEntry.value;
-
-                    return SizedBox(
-                      key: _pyramidCardKeys[layerIndex][cardIndex],
-                      child: PyramidCardWidget(
-                        card: card,
-                        cardCount: gameLogic.pileCardCountFor(
-                          layerIndex,
-                          cardIndex,
-                        ),
-                        onTap: () {
-                          setState(() {
-                            gameLogic.selectCard(layerIndex, cardIndex);
-                          });
-                        },
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         );
       }).toList(),
     );
@@ -412,33 +489,60 @@ class _PyramidGamePageState extends State<PyramidGamePage>
     final bool isInteractionLocked =
         _pendingResultDialogAfterDeckFlip || _isCoverAnimating;
 
-    return GuessButtons(
-      biggerLabel: selectedCard != null
-          ? PyramidPokerStrings.format('guessHigherWithRank', {
-              'rank': selectedCard.rank.toString(),
-            })
-          : PyramidPokerStrings.get('guessHigher'),
-      smallerLabel: selectedCard != null
-          ? PyramidPokerStrings.format('guessLowerWithRank', {
-              'rank': selectedCard.rank.toString(),
-            })
-          : PyramidPokerStrings.get('guessLower'),
-      onGuessBigger:
-          !isInteractionLocked &&
-              gameLogic.canGuess &&
-              gameLogic.pyramid.deck.isNotEmpty &&
-              gameLogic.selectedLayer != null &&
-              gameLogic.selectedIndex != null
-          ? () => _handleGuess(isBiggerGuess: true)
-          : null,
-      onGuessSmaller:
-          !isInteractionLocked &&
-              gameLogic.canGuess &&
-              gameLogic.pyramid.deck.isNotEmpty &&
-              gameLogic.selectedLayer != null &&
-              gameLogic.selectedIndex != null
-          ? () => _handleGuess(isBiggerGuess: false)
-          : null,
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: SizedBox(
+        width: _rowLabelWidth + _pyramidAreaWidth,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: _pyramidAreaWidth,
+              child: GuessButtons(
+                biggerLabel: selectedCard != null
+                    ? PyramidPokerStrings.format('guessHigherWithRank', {
+                        'rank': selectedCard.rank.toString(),
+                      })
+                    : PyramidPokerStrings.get('guessHigher'),
+                smallerLabel: selectedCard != null
+                    ? PyramidPokerStrings.format('guessLowerWithRank', {
+                        'rank': selectedCard.rank.toString(),
+                      })
+                    : PyramidPokerStrings.get('guessLower'),
+                onGuessBigger:
+                    !isInteractionLocked &&
+                        gameLogic.canGuess &&
+                        gameLogic.pyramid.deck.isNotEmpty &&
+                        gameLogic.selectedLayer != null &&
+                        gameLogic.selectedIndex != null
+                    ? () => _handleGuess(isBiggerGuess: true)
+                    : null,
+                onGuessSmaller:
+                    !isInteractionLocked &&
+                        gameLogic.canGuess &&
+                        gameLogic.pyramid.deck.isNotEmpty &&
+                        gameLogic.selectedLayer != null &&
+                        gameLogic.selectedIndex != null
+                    ? () => _handleGuess(isBiggerGuess: false)
+                    : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDeckArea() {
+    return SizedBox(
+      width: _deckAreaWidth,
+      child: DeckPileWidget(
+        deck: gameLogic.pyramid.deck,
+        currentDeckCard: _isCoverAnimating ? null : gameLogic.currentDeckCard,
+        onCurrentDeckCardFlipCompleted: _onDeckCardFlipCompleted,
+        currentDeckCardAnchorKey: _deckCardGlobalKey,
+        pileAnchorKey: _deckPileAnchorKey,
+      ),
     );
   }
 
@@ -459,53 +563,84 @@ class _PyramidGamePageState extends State<PyramidGamePage>
                 _flyEndRect = null;
                 _flyController?.dispose();
                 _flyController = null;
-                _flyAnimation = null;
                 gameLogic.resetGame();
                 gameLogic.settings = widget.settings;
                 _pyramidCardKeys = _createPyramidCardKeys();
+                _pyramidLayerRowKeys = List<GlobalKey>.generate(
+                  gameLogic.pyramid.layers.length,
+                  (_) => GlobalKey(),
+                );
               });
             },
           ),
         ],
       ),
       body: Center(
-        child: Stack(
-          key: _boardGlobalKey,
-          fit: StackFit.expand,
-          children: [
-            Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildPyramid(),
-                        if (gameLogic.selectedCard != null &&
-                            gameLogic.selectedCard!.isFaceUp)
-                          _buildGuessButtons(),
-                      ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final bool isCompact = constraints.maxWidth < 520;
+
+            return Stack(
+              key: _boardGlobalKey,
+              fit: StackFit.expand,
+              children: [
+                if (isCompact)
+                  Positioned(top: 12, right: 12, child: _buildDeckArea()),
+                Center(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      12,
+                      isCompact ? 20 : 16,
+                      12,
+                      16,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: isCompact ? 320 : 760,
+                      ),
+                      child: isCompact
+                          ? Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(height: 12),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 76),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _buildPyramid(),
+                                      if (gameLogic.selectedCard != null &&
+                                          gameLogic.selectedCard!.isFaceUp)
+                                        _buildGuessButtons(),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _buildPyramid(),
+                                    if (gameLogic.selectedCard != null &&
+                                        gameLogic.selectedCard!.isFaceUp)
+                                      _buildGuessButtons(),
+                                  ],
+                                ),
+                                const SizedBox(width: _gameTableGap),
+                                _buildDeckArea(),
+                              ],
+                            ),
                     ),
                   ),
-                  Expanded(
-                    flex: 1,
-                    child: DeckPileWidget(
-                      deck: gameLogic.pyramid.deck,
-                      currentDeckCard: _isCoverAnimating
-                          ? null
-                          : gameLogic.currentDeckCard,
-                      onCurrentDeckCardFlipCompleted: _onDeckCardFlipCompleted,
-                      currentDeckCardAnchorKey: _deckCardGlobalKey,
-                      pileAnchorKey: _deckPileAnchorKey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            _buildFlyingCardOverlay(),
-          ],
+                ),
+                _buildFlyingCardOverlay(),
+              ],
+            );
+          },
         ),
       ),
     );

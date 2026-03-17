@@ -32,6 +32,7 @@ class _GameAppState extends State<GameApp> {
             return MaterialApp(
               title: PyramidPokerStrings.get('appTitle'),
               theme: AppTheme.lightTheme,
+              themeAnimationDuration: Duration.zero,
               home: const MainMenuPage(),
               debugShowCheckedModeBanner: false,
             );

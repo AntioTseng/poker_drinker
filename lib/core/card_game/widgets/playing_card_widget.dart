@@ -196,6 +196,7 @@ class _CardPainter extends CustomPainter {
 
     if (!isFaceUp) {
       canvas.drawRRect(rrect, Paint()..color = CardPalette.cardBack);
+      _paintCardBackPattern(canvas, size, rrect);
       canvas.drawRRect(rrect, borderPaint);
       return;
     }
@@ -237,4 +238,92 @@ class _CardPainter extends CustomPainter {
         oldDelegate.suitSymbol != suitSymbol ||
         oldDelegate.suitColor != suitColor;
   }
+}
+
+void _paintCardBackPattern(Canvas canvas, Size size, RRect rrect) {
+  canvas.save();
+  canvas.clipRRect(rrect);
+
+  final rect = Offset.zero & size;
+  final insetRect = rect.deflate(4);
+  final insetRadius = math.max(0.0, rrect.brRadiusX - 2);
+  final insetRRect = RRect.fromRectAndRadius(
+    insetRect,
+    Radius.circular(insetRadius),
+  );
+
+  final innerBorderPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1
+    ..color = CardPalette.cardBackPattern.withValues(alpha: 0.52);
+  canvas.drawRRect(insetRRect, innerBorderPaint);
+
+  final double tile = math.max(8.0, size.shortestSide / 4.8);
+  final parquetPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.05
+    ..color = CardPalette.cardBackPattern.withValues(alpha: 0.34);
+  final grainPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 0.8
+    ..strokeCap = StrokeCap.round
+    ..color = CardPalette.cardBackPatternSoft.withValues(alpha: 0.28);
+  final dotPaint = Paint()
+    ..style = PaintingStyle.fill
+    ..color = CardPalette.cardBackPattern.withValues(alpha: 0.18);
+
+  for (double y = 9; y <= size.height - 9; y += tile) {
+    for (double x = 8; x <= size.width - 8; x += tile) {
+      final path = Path()
+        ..moveTo(x + tile * 0.5, y)
+        ..lineTo(x + tile, y + tile * 0.5)
+        ..lineTo(x + tile * 0.5, y + tile)
+        ..lineTo(x, y + tile * 0.5)
+        ..close();
+      canvas.drawPath(path, parquetPaint);
+    }
+  }
+
+  for (double y = 11; y <= size.height - 11; y += tile * 0.9) {
+    final phase = ((y / tile).floor().isEven ? 0.0 : tile * 0.5);
+    for (double x = 10; x <= size.width - 10; x += tile) {
+      canvas.drawCircle(Offset(x + phase, y), 0.9, dotPaint);
+    }
+  }
+
+  for (double y = 12; y <= size.height - 12; y += tile * 1.15) {
+    final startX = 10 + (((y / tile).floor() & 1) * tile * 0.5);
+    for (double x = startX; x <= size.width - 16; x += tile) {
+      final curve = Path()
+        ..moveTo(x, y)
+        ..quadraticBezierTo(x + tile * 0.32, y - 1.5, x + tile * 0.65, y)
+        ..quadraticBezierTo(x + tile * 0.96, y + 1.6, x + tile * 1.2, y);
+      canvas.drawPath(curve, grainPaint);
+      canvas.drawPath(curve.shift(const Offset(0, 3.2)), grainPaint);
+      canvas.drawPath(curve.shift(const Offset(0, 6.4)), grainPaint);
+    }
+  }
+
+  final center = rect.center;
+  final ringPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.4
+    ..color = CardPalette.cardBackPattern.withValues(alpha: 0.6);
+  canvas.drawCircle(center, size.shortestSide * 0.18, ringPaint);
+  canvas.drawCircle(center, size.shortestSide * 0.12, ringPaint);
+
+  final petalPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1
+    ..color = CardPalette.cardBackPatternSoft.withValues(alpha: 0.54);
+  for (int i = 0; i < 8; i++) {
+    final a = (i / 8.0) * math.pi * 2;
+    final p = Offset(
+      center.dx + math.cos(a) * size.shortestSide * 0.12,
+      center.dy + math.sin(a) * size.shortestSide * 0.12,
+    );
+    canvas.drawCircle(p, size.shortestSide * 0.035, petalPaint);
+  }
+
+  canvas.restore();
 }

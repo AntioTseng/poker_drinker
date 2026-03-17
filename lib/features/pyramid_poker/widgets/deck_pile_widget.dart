@@ -38,14 +38,9 @@ class DeckPileWidget extends StatelessWidget {
             for (int i = 0; i < deck.length; i++)
               Positioned(
                 top: i * 2.0,
-                child: Container(
-                  width: pileWidth,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: CardPalette.cardBack,
-                    border: Border.all(color: CardPalette.motherPile),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
+                child: CustomPaint(
+                  painter: _PileBackPainter(),
+                  child: SizedBox(width: pileWidth, height: 70),
                 ),
               ),
             if (currentDeckCard != null)
@@ -87,4 +82,83 @@ class DeckPileWidget extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PileBackPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rrect = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      const Radius.circular(6),
+    );
+    canvas.drawRRect(rrect, Paint()..color = CardPalette.cardBack);
+
+    final inset = RRect.fromRectAndRadius(
+      (Offset.zero & size).deflate(3.5),
+      const Radius.circular(4.5),
+    );
+    canvas.save();
+    canvas.clipRRect(rrect);
+    canvas.drawRRect(
+      inset,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = CardPalette.cardBackPattern.withValues(alpha: 0.48),
+    );
+
+    const tile = 9.0;
+    final parquetPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = CardPalette.cardBackPattern.withValues(alpha: 0.3);
+    final grainPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8
+      ..strokeCap = StrokeCap.round
+      ..color = CardPalette.cardBackPatternSoft.withValues(alpha: 0.24);
+
+    for (double y = 8; y <= size.height - 8; y += tile) {
+      for (double x = 7; x <= size.width - 7; x += tile) {
+        final path = Path()
+          ..moveTo(x + tile * 0.5, y)
+          ..lineTo(x + tile, y + tile * 0.5)
+          ..lineTo(x + tile * 0.5, y + tile)
+          ..lineTo(x, y + tile * 0.5)
+          ..close();
+        canvas.drawPath(path, parquetPaint);
+      }
+    }
+
+    for (double y = 12; y <= size.height - 12; y += 10) {
+      final phase = ((y / 10).floor().isEven ? 0.0 : 4.0);
+      for (double x = 10 + phase; x <= size.width - 16; x += 12) {
+        final curve = Path()
+          ..moveTo(x, y)
+          ..quadraticBezierTo(x + 4, y - 1.4, x + 8, y)
+          ..quadraticBezierTo(x + 11, y + 1.4, x + 14, y);
+        canvas.drawPath(curve, grainPaint);
+      }
+    }
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final ringPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.3
+      ..color = CardPalette.cardBackPattern.withValues(alpha: 0.56);
+    canvas.drawCircle(center, size.shortestSide * 0.18, ringPaint);
+    canvas.drawCircle(center, size.shortestSide * 0.11, ringPaint);
+
+    canvas.restore();
+    canvas.drawRRect(
+      rrect,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = CardPalette.motherPile,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _PileBackPainter oldDelegate) => false;
 }

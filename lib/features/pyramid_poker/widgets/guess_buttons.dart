@@ -19,9 +19,25 @@ class GuessButtons extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        ElevatedButton(onPressed: onGuessBigger, child: Text(biggerLabel)),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: onGuessBigger,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(biggerLabel, maxLines: 1),
+            ),
+          ),
+        ),
         const SizedBox(width: 12),
-        ElevatedButton(onPressed: onGuessSmaller, child: Text(smallerLabel)),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: onGuessSmaller,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(smallerLabel, maxLines: 1),
+            ),
+          ),
+        ),
       ],
     );
   }
