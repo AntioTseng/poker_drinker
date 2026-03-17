@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/card_game/models/playing_card.dart';
 import '../../../core/card_game/widgets/playing_card_widget.dart';
+import '../../../core/i18n/app_locale.dart';
 import '../../../core/theme/app_theme.dart';
 import '../logic/pyramid_game_logic.dart';
 import '../models/pyramid_settings.dart';
@@ -8,7 +9,6 @@ import '../resources/strings.dart';
 import '../widgets/deck_pile_widget.dart';
 import '../widgets/guess_buttons.dart';
 import '../widgets/pyramid_card_widget.dart';
-import '../widgets/result_dialog.dart';
 
 class PyramidGamePage extends StatefulWidget {
   final PyramidSettings settings;
@@ -21,10 +21,17 @@ class PyramidGamePage extends StatefulWidget {
 
 class _PyramidGamePageState extends State<PyramidGamePage>
     with TickerProviderStateMixin {
+  static const double _manualRevealWidth = 108;
+  static const double _manualRevealHeight = 152;
+
   late PyramidGameLogic gameLogic;
-  bool _isDialogShowing = false;
-  bool _pendingResultDialogAfterDeckFlip = false;
   bool _isCoverAnimating = false;
+  bool _isManualRevealActive = false;
+  bool _isManualRevealCompleted = false;
+  bool _isManualRevealResultVisible = false;
+  double _manualRevealProgress = 0;
+  Offset _manualRevealVector = const Offset(1, 0);
+  bool _isManualRevealGestureLocked = false;
 
   final GlobalKey _deckCardGlobalKey = GlobalKey();
   final GlobalKey _deckPileAnchorKey = GlobalKey();
@@ -80,6 +87,15 @@ class _PyramidGamePageState extends State<PyramidGamePage>
     super.dispose();
   }
 
+  void _resetManualRevealState() {
+    _isManualRevealActive = false;
+    _isManualRevealCompleted = false;
+    _isManualRevealResultVisible = false;
+    _manualRevealProgress = 0;
+    _manualRevealVector = const Offset(1, 0);
+    _isManualRevealGestureLocked = false;
+  }
+
   void _coverImmediately() {
     if (!mounted) {
       return;
@@ -95,7 +111,7 @@ class _PyramidGamePageState extends State<PyramidGamePage>
     });
   }
 
-  void _triggerCoverAnimationAfterDialogClose() {
+  void _triggerCoverAnimationAfterRevealClose() {
     if (_isCoverAnimating) {
       return;
     }
@@ -289,32 +305,6 @@ class _PyramidGamePageState extends State<PyramidGamePage>
     );
   }
 
-  Future<void> _showResultDialog() async {
-    if (_isDialogShowing || gameLogic.result.isEmpty) {
-      return;
-    }
-
-    _isDialogShowing = true;
-
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return ResultDialog(
-          result: gameLogic.result,
-          penalty: gameLogic.penalty,
-          penaltyExplain: gameLogic.penaltyExplain,
-          onCover: () {
-            Navigator.of(dialogContext).pop();
-            _triggerCoverAnimationAfterDialogClose();
-          },
-        );
-      },
-    );
-
-    _isDialogShowing = false;
-  }
-
   Future<void> _handleGuess({required bool isBiggerGuess}) async {
     setState(() {
       if (isBiggerGuess) {
@@ -322,26 +312,506 @@ class _PyramidGamePageState extends State<PyramidGamePage>
       } else {
         gameLogic.guessSmaller();
       }
+
+      if (gameLogic.currentDeckCard != null) {
+        _isManualRevealActive = true;
+        _isManualRevealCompleted = false;
+        _isManualRevealResultVisible = false;
+        _manualRevealProgress = 0;
+        _manualRevealVector = const Offset(1, 0);
+        _isManualRevealGestureLocked = false;
+      } else {
+        _resetManualRevealState();
+      }
+    });
+  }
+
+  Future<void> _completeManualReveal() async {
+    if (_isManualRevealCompleted || !_isManualRevealActive) {
+      return;
+    }
+
+    setState(() {
+      _manualRevealProgress = 1;
+      _isManualRevealCompleted = true;
+      _isManualRevealResultVisible = false;
     });
 
-    _pendingResultDialogAfterDeckFlip = gameLogic.currentDeckCard != null;
+    await Future<void>.delayed(const Duration(milliseconds: 320));
 
-    if (!_pendingResultDialogAfterDeckFlip) {
-      await _showResultDialog();
+    if (!mounted || !_isManualRevealActive || !_isManualRevealCompleted) {
+      return;
+    }
+
+    setState(() {
+      _isManualRevealResultVisible = true;
+    });
+  }
+
+  void _handleManualRevealPanStart(DragStartDetails details) {
+    if (!_isManualRevealActive || _isManualRevealCompleted) {
+      return;
+    }
+
+    _isManualRevealGestureLocked = false;
+  }
+
+  void _handleManualRevealPanUpdate(DragUpdateDetails details) {
+    if (!_isManualRevealActive || _isManualRevealCompleted) {
+      return;
+    }
+
+    final Offset delta = details.delta;
+    if (!_isManualRevealGestureLocked) {
+      if (delta.distance < 2) {
+        return;
+      }
+      _manualRevealVector = _normalizedOrFallback(delta);
+      _isManualRevealGestureLocked = true;
+    }
+
+    final double alignedDelta =
+        (delta.dx * _manualRevealVector.dx) +
+        (delta.dy * _manualRevealVector.dy);
+    final double diagonalExtent =
+        (Offset(_manualRevealWidth, _manualRevealHeight).distance) * 2.45;
+    final double progressDelta = alignedDelta / diagonalExtent;
+    final double next = (_manualRevealProgress + progressDelta).clamp(0.0, 1.0);
+
+    if (next == _manualRevealProgress) {
+      return;
+    }
+
+    setState(() {
+      _manualRevealProgress = next;
+    });
+
+    if (next >= 1) {
+      _completeManualReveal();
     }
   }
 
-  Future<void> _onDeckCardFlipCompleted() async {
+  void _handleManualRevealPanEnd(DragEndDetails details) {
+    _isManualRevealGestureLocked = false;
+
+    if (_manualRevealProgress >= 0.985) {
+      _completeManualReveal();
+    }
+  }
+
+  Future<void> _handleManualRevealTap(TapUpDetails details) async {
+    if (!_isManualRevealActive || _isManualRevealCompleted) {
+      return;
+    }
+
+    setState(() {
+      _manualRevealVector = _normalizedOrFallback(
+        Offset(
+          details.localPosition.dx - ((_manualRevealWidth + 8) / 2),
+          details.localPosition.dy - ((_manualRevealHeight + 8) / 2),
+        ),
+      );
+    });
+
+    await _completeManualReveal();
+  }
+
+  Offset _normalizedOrFallback(Offset value) {
+    if (value.distance == 0) {
+      return const Offset(1, 0);
+    }
+    return value / value.distance;
+  }
+
+  String _formatNumber(double value) {
+    if (value == value.roundToDouble()) {
+      return value.toInt().toString();
+    }
+    return value.toStringAsFixed(1);
+  }
+
+  bool get _didPlayerLose => gameLogic.penalty > 0;
+
+  Color get _resultAccentColor =>
+      _didPlayerLose ? const Color(0xFFB14E3A) : const Color(0xFF2F7A4E);
+
+  Color get _resultSurfaceColor =>
+      _didPlayerLose ? const Color(0xFFF7E5DE) : const Color(0xFFE7F4EA);
+
+  bool get _isZhLocale {
+    return AppLocale.code.value.toLowerCase().startsWith('zh');
+  }
+
+  String get _resultHeadline {
+    return _didPlayerLose
+        ? (_isZhLocale ? '猜錯了' : 'Wrong Guess')
+        : (_isZhLocale ? '猜對了' : 'Correct');
+  }
+
+  String get _resultPrimaryMessage {
+    if (_didPlayerLose) {
+      return _isZhLocale
+          ? '喝 ${_formatNumber(gameLogic.penalty)} 杯'
+          : '${_formatNumber(gameLogic.penalty)} cups';
+    }
+    return _isZhLocale ? '不用喝' : 'No penalty';
+  }
+
+  String get _resultComparisonMessage {
+    final selectedCard = gameLogic.selectedCard;
+    final deckCard = gameLogic.currentDeckCard;
+
+    if (selectedCard == null || deckCard == null) {
+      return '';
+    }
+
+    if (deckCard.rank == selectedCard.rank) {
+      return _isZhLocale
+          ? '${deckCard.rankLabel} = ${selectedCard.rankLabel}'
+          : '${deckCard.rankLabel} = ${selectedCard.rankLabel}';
+    }
+
+    final bool isHigher = deckCard.rank > selectedCard.rank;
+    if (_isZhLocale) {
+      return isHigher
+          ? '${deckCard.rankLabel} > ${selectedCard.rankLabel}'
+          : '${deckCard.rankLabel} < ${selectedCard.rankLabel}';
+    }
+
+    return isHigher
+        ? '${deckCard.rankLabel} > ${selectedCard.rankLabel}'
+        : '${deckCard.rankLabel} < ${selectedCard.rankLabel}';
+  }
+
+  String get _penaltyBreakdownFormula {
+    if (!_didPlayerLose || gameLogic.selectedLayer == null) {
+      return '';
+    }
+
+    final int layerNumber = gameLogic.selectedLayer! + 1;
+    final int layerMultiplier = gameLogic.settings.multiplierForLayer(
+      gameLogic.selectedLayer!,
+    );
+    final int cardCount = gameLogic.selectedPileCardCount;
+    final String unitValue = _formatNumber(gameLogic.settings.initialUnit);
+    final List<String> parts = <String>[
+      _isZhLocale
+          ? '第$layerNumber層×$layerMultiplier'
+          : 'L$layerNumber×$layerMultiplier',
+      _isZhLocale ? '${cardCount}張' : '$cardCount cards',
+      _isZhLocale ? '${unitValue}杯' : '$unitValue cup',
+    ];
+
+    final selectedCard = gameLogic.selectedCard;
+    final deckCard = gameLogic.currentDeckCard;
+    final bool isTie =
+        selectedCard != null &&
+        deckCard != null &&
+        selectedCard.rank == deckCard.rank;
+    if (isTie) {
+      parts.add(
+        _isZhLocale
+            ? '撞柱×${_formatNumber(gameLogic.settings.tiePenalty)}'
+            : 'tie×${_formatNumber(gameLogic.settings.tiePenalty)}',
+      );
+    }
+
+    final String total = _isZhLocale
+        ? '= ${_formatNumber(gameLogic.penalty)}杯'
+        : '= ${_formatNumber(gameLogic.penalty)} cups';
+    return '${parts.join(' · ')}  $total';
+  }
+
+  void _handleManualRevealContinue() {
     if (!mounted) {
       return;
     }
 
-    if (!_pendingResultDialogAfterDeckFlip) {
-      return;
+    setState(_resetManualRevealState);
+    _triggerCoverAnimationAfterRevealClose();
+  }
+
+  IconData _iconForRevealVector() {
+    final dx = _manualRevealVector.dx;
+    final dy = _manualRevealVector.dy;
+
+    if (dx.abs() > dy.abs() * 1.4) {
+      return dx >= 0 ? Icons.west_rounded : Icons.east_rounded;
+    }
+    if (dy.abs() > dx.abs() * 1.4) {
+      return dy >= 0 ? Icons.north_rounded : Icons.south_rounded;
+    }
+    if (dx >= 0 && dy >= 0) {
+      return Icons.north_west_rounded;
+    }
+    if (dx < 0 && dy >= 0) {
+      return Icons.north_east_rounded;
+    }
+    if (dx >= 0 && dy < 0) {
+      return Icons.south_west_rounded;
+    }
+    return Icons.south_east_rounded;
+  }
+
+  Widget _buildManualRevealOverlay() {
+    final selectedCard = gameLogic.selectedCard;
+    final deckCard = gameLogic.currentDeckCard;
+
+    if (!_isManualRevealActive || selectedCard == null || deckCard == null) {
+      return const SizedBox.shrink();
     }
 
-    _pendingResultDialogAfterDeckFlip = false;
-    await _showResultDialog();
+    return Positioned.fill(
+      child: ColoredBox(
+        color: Colors.black.withValues(alpha: 0.18),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppTheme.panel,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x22000000),
+                      blurRadius: 26,
+                      offset: Offset(0, 12),
+                    ),
+                  ],
+                  border: Border.all(
+                    color: AppTheme.secondaryAccent.withValues(alpha: 0.18),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedOpacity(
+                        duration: const Duration(milliseconds: 220),
+                        opacity: _isManualRevealResultVisible ? 0.72 : 1,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildManualRevealCardFrame(
+                              child: PlayingCardWidget(
+                                card: selectedCard,
+                                width: _manualRevealWidth,
+                                height: _manualRevealHeight,
+                                flipDuration: Duration.zero,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 56,
+                              ),
+                              child: AnimatedOpacity(
+                                duration: const Duration(milliseconds: 180),
+                                opacity: _isManualRevealCompleted ? 0 : 1,
+                                child: Icon(
+                                  _iconForRevealVector(),
+                                  color: AppTheme.secondaryAccent,
+                                  size: 30,
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTapUp: _handleManualRevealTap,
+                              onPanStart: _handleManualRevealPanStart,
+                              onPanUpdate: _handleManualRevealPanUpdate,
+                              onPanEnd: _handleManualRevealPanEnd,
+                              child: _buildManualRevealCardFrame(
+                                accent: _manualRevealProgress > 0
+                                    ? AppTheme.primaryAccent
+                                    : AppTheme.secondaryAccent,
+                                child: PlayingCardWidget(
+                                  card: deckCard,
+                                  width: _manualRevealWidth,
+                                  height: _manualRevealHeight,
+                                  flipDuration: Duration.zero,
+                                  flipProgress: _manualRevealProgress,
+                                  flipVector: _manualRevealVector,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        child: _isManualRevealResultVisible
+                            ? _buildManualRevealResultSection()
+                            : const SizedBox(height: 0),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildManualRevealCardFrame({required Widget child, Color? accent}) {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: AppTheme.pageBackground.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: (accent ?? AppTheme.secondaryAccent).withValues(alpha: 0.24),
+        ),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildManualRevealResultSection() {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Padding(
+      key: const ValueKey('manual-reveal-result'),
+      padding: const EdgeInsets.only(top: 18),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: _resultSurfaceColor,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: _resultAccentColor.withValues(alpha: 0.2),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _resultAccentColor.withValues(alpha: 0.08),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.58),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      _resultHeadline,
+                      textAlign: TextAlign.center,
+                      style: textTheme.titleLarge?.copyWith(
+                        color: _resultAccentColor,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    _resultPrimaryMessage,
+                    textAlign: TextAlign.center,
+                    style:
+                        (_didPlayerLose
+                                ? textTheme.displaySmall
+                                : textTheme.headlineMedium)
+                            ?.copyWith(
+                              color: _resultAccentColor,
+                              fontWeight: FontWeight.w900,
+                              height: 0.98,
+                            ),
+                  ),
+                  if (_resultComparisonMessage.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.48),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        _resultComparisonMessage,
+                        textAlign: TextAlign.center,
+                        style: textTheme.titleMedium?.copyWith(
+                          color: AppTheme.ink,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (_didPlayerLose &&
+                      _penaltyBreakdownFormula.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.38),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _resultAccentColor.withValues(alpha: 0.12),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _isZhLocale ? '計算方式' : 'Calculation',
+                            textAlign: TextAlign.center,
+                            style: textTheme.bodySmall?.copyWith(
+                              color: _resultAccentColor.withValues(alpha: 0.82),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            _penaltyBreakdownFormula,
+                            textAlign: TextAlign.center,
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: AppTheme.ink,
+                              fontWeight: FontWeight.w800,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _handleManualRevealContinue,
+              child: Text(PyramidPokerStrings.get('coverSelectedCardButton')),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildMultiplierRailItem({
@@ -486,8 +956,7 @@ class _PyramidGamePageState extends State<PyramidGamePage>
 
   Widget _buildGuessButtons() {
     final selectedCard = gameLogic.selectedCard;
-    final bool isInteractionLocked =
-        _pendingResultDialogAfterDeckFlip || _isCoverAnimating;
+    final bool isInteractionLocked = _isCoverAnimating || _isManualRevealActive;
 
     return Padding(
       padding: const EdgeInsets.only(top: 14),
@@ -538,8 +1007,9 @@ class _PyramidGamePageState extends State<PyramidGamePage>
       width: _deckAreaWidth,
       child: DeckPileWidget(
         deck: gameLogic.pyramid.deck,
-        currentDeckCard: _isCoverAnimating ? null : gameLogic.currentDeckCard,
-        onCurrentDeckCardFlipCompleted: _onDeckCardFlipCompleted,
+        currentDeckCard: (_isCoverAnimating || _isManualRevealActive)
+            ? null
+            : gameLogic.currentDeckCard,
         currentDeckCardAnchorKey: _deckCardGlobalKey,
         pileAnchorKey: _deckPileAnchorKey,
       ),
@@ -556,8 +1026,8 @@ class _PyramidGamePageState extends State<PyramidGamePage>
             icon: const Icon(Icons.refresh),
             onPressed: () {
               setState(() {
-                _pendingResultDialogAfterDeckFlip = false;
                 _isCoverAnimating = false;
+                _resetManualRevealState();
                 _flyingDeckCard = null;
                 _flyStartRect = null;
                 _flyEndRect = null;
@@ -638,6 +1108,7 @@ class _PyramidGamePageState extends State<PyramidGamePage>
                   ),
                 ),
                 _buildFlyingCardOverlay(),
+                _buildManualRevealOverlay(),
               ],
             );
           },
