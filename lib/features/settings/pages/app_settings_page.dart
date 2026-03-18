@@ -97,9 +97,9 @@ class AppSettingsPage extends StatelessWidget {
                               horizontal: 16,
                               vertical: 6,
                             ),
-                            title: const Text('Main Menu Cover Demo'),
+                            title: const Text('Main Menu Demo'),
                             subtitle: Text(
-                              'Compare multiple polished cover directions',
+                              'Compare five production-ready main menu directions',
                               style: textTheme.bodySmall?.copyWith(
                                 color: _settingsMuted,
                               ),

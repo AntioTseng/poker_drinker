@@ -12,18 +12,12 @@ const _goldAccent = Color(0xFFE8C98D);
 class _GameEntry {
   final String titleKey;
   final String playerCountKey;
-  final String? subtitleKey;
-  final String? subtitleFallbackZh;
-  final String? subtitleFallbackEn;
   final bool featured;
   final VoidCallback? onTap;
 
   const _GameEntry({
     required this.titleKey,
     required this.playerCountKey,
-    this.subtitleKey,
-    this.subtitleFallbackZh,
-    this.subtitleFallbackEn,
     this.featured = false,
     this.onTap,
   });
@@ -53,10 +47,8 @@ class _SectionStyle {
   final Color surface;
   final Color surfaceAlt;
   final Color border;
-  final Color glow;
   final Color text;
   final Color mutedText;
-  final IconData icon;
 
   const _SectionStyle({
     required this.accent,
@@ -64,10 +56,8 @@ class _SectionStyle {
     required this.surface,
     required this.surfaceAlt,
     required this.border,
-    required this.glow,
     required this.text,
     required this.mutedText,
-    required this.icon,
   });
 }
 
@@ -80,10 +70,8 @@ _SectionStyle _styleForLevel(String levelKey) {
         surface: Color(0xFF241419),
         surfaceAlt: Color(0xFF2A1818),
         border: Color(0xFF8D6138),
-        glow: Color(0xFFD7A15C),
         text: Color(0xFFF7EBD9),
         mutedText: Color(0xFFD3BEA1),
-        icon: Icons.local_bar_rounded,
       );
     case 'gameLevelClassic':
       return const _SectionStyle(
@@ -92,10 +80,8 @@ _SectionStyle _styleForLevel(String levelKey) {
         surface: Color(0xFF26121A),
         surfaceAlt: Color(0xFF2D151F),
         border: Color(0xFF915A56),
-        glow: Color(0xFFC7867A),
         text: Color(0xFFF8E6E2),
         mutedText: Color(0xFFD8BCB8),
-        icon: Icons.sports_bar_rounded,
       );
     default:
       return const _SectionStyle(
@@ -104,10 +90,8 @@ _SectionStyle _styleForLevel(String levelKey) {
         surface: Color(0xFF2A0E16),
         surfaceAlt: Color(0xFF35101B),
         border: Color(0xFFC59079),
-        glow: Color(0xFF9A3245),
         text: Color(0xFFFFEEF0),
         mutedText: Color(0xFFE0B8BE),
-        icon: Icons.liquor_rounded,
       );
   }
 }
@@ -124,6 +108,49 @@ String _menuText(
   }
 
   return Localizations.localeOf(context).languageCode == 'en' ? en : zh;
+}
+
+String _sectionLead(BuildContext context, String levelKey) {
+  switch (levelKey) {
+    case 'gameLevelStarter':
+      return _menuText(
+        context,
+        'gameLevelStarterLead',
+        zh: '暖場開局',
+        en: 'Opening Round',
+      );
+    case 'gameLevelClassic':
+      return _menuText(
+        context,
+        'gameLevelClassicLead',
+        zh: '節奏升溫',
+        en: 'Raising the Pace',
+      );
+    default:
+      return _menuText(
+        context,
+        'gameLevelChallengeLead',
+        zh: '今晚主桌',
+        en: 'House Headliner',
+      );
+  }
+}
+
+Color _gameTitleColor(_GameEntry entry, String levelKey, _SectionStyle style) {
+  switch (entry.titleKey) {
+    case 'gameCompareTitle':
+      return const Color(0xFFF0D6A1);
+    case 'gameHorseRaceTitle':
+      return const Color(0xFFE7B98A);
+    case 'gameTitle':
+      return const Color(0xFFFFE1B0);
+    case 'gameClassicReservedTitle':
+      return const Color(0xFFE4C7C3);
+    case 'gameChallengeReservedTitle':
+      return const Color(0xFFE0A59B);
+    default:
+      return style.text;
+  }
 }
 
 class MainMenuPage extends StatelessWidget {
@@ -169,10 +196,6 @@ class MainMenuPage extends StatelessWidget {
           _GameEntry(
             titleKey: 'gameTitle',
             playerCountKey: 'gamePyramidPlayers',
-            subtitleKey: 'gameCardPyramidSubtitle',
-            subtitleFallbackZh: '疊得越高，喝得越多，最適合做今晚主打的一局。',
-            subtitleFallbackEn:
-                'The higher the pyramid climbs, the harder the whole table pays.',
             featured: true,
             onTap: () {
               Navigator.push(
@@ -198,7 +221,8 @@ class MainMenuPage extends StatelessWidget {
         foregroundColor: _goldAccent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        titleSpacing: 20,
+        toolbarHeight: 50,
+        titleSpacing: 16,
         title: Text(
           _menuText(
             context,
@@ -209,7 +233,8 @@ class MainMenuPage extends StatelessWidget {
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             color: _goldAccent,
             fontWeight: FontWeight.w800,
-            letterSpacing: 1.2,
+            fontSize: 17,
+            letterSpacing: 1.0,
           ),
         ),
         actions: [
@@ -230,79 +255,42 @@ class MainMenuPage extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final compact = constraints.maxWidth < 420;
-            final horizontalPadding = compact ? 12.0 : 20.0;
-            final topPadding = compact ? 6.0 : 12.0;
-            final bottomPadding = compact ? 16.0 : 28.0;
-            final sectionGap = compact ? 8.0 : 14.0;
+            final horizontalPadding = compact ? 14.0 : 22.0;
+            final topPadding = compact ? 10.0 : 14.0;
+            final bottomPadding = compact ? 22.0 : 32.0;
+            final sectionGap = compact ? 16.0 : 22.0;
 
-            return Stack(
-              children: [
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [_pageBackgroundTop, _pageBackgroundBottom],
-                      ),
-                    ),
-                  ),
+            return DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [_pageBackgroundTop, _pageBackgroundBottom],
                 ),
-                Positioned(
-                  top: compact ? -52 : -40,
-                  right: compact ? -68 : -44,
-                  child: IgnorePointer(
-                    child: Container(
-                      width: compact ? 180 : 240,
-                      height: compact ? 180 : 240,
-                      decoration: BoxDecoration(
-                        color: _goldAccent.withValues(alpha: 0.08),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
+              ),
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    topPadding,
+                    horizontalPadding,
+                    bottomPadding,
                   ),
-                ),
-                Positioned(
-                  left: -56,
-                  bottom: compact ? 40 : 18,
-                  child: IgnorePointer(
-                    child: Container(
-                      width: compact ? 156 : 220,
-                      height: compact ? 156 : 220,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF8C2741).withValues(alpha: 0.18),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                ),
-                Center(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      topPadding,
-                      horizontalPadding,
-                      bottomPadding,
-                    ),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 520),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          for (final section in sections) ...[
-                            _GameSectionBlock(
-                              section: section,
-                              compact: compact,
-                            ),
-                            if (section != sections.last)
-                              SizedBox(height: sectionGap),
-                          ],
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final section in sections) ...[
+                          _GameSectionBlock(section: section, compact: compact),
+                          if (section != sections.last)
+                            SizedBox(height: sectionGap),
                         ],
-                      ),
+                      ],
                     ),
                   ),
                 ),
-              ],
+              ),
             );
           },
         ),
@@ -322,167 +310,147 @@ class _GameSectionBlock extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final style = _styleForLevel(section.levelKey);
     final isChallenge = section.levelKey == 'gameLevelChallenge';
-    final isStarter = section.levelKey == 'gameLevelStarter';
-    final outerRadius = compact
-        ? (isChallenge ? 23.0 : 20.0)
-        : (isChallenge ? 28.0 : 26.0);
-    final blockPadding = compact
-        ? (isChallenge ? 13.0 : 10.0)
-        : (isChallenge ? 16.0 : 15.0);
-    final headerGap = compact ? (isChallenge ? 9.0 : 6.0) : 12.0;
-    final entryGap = compact ? 6.0 : 10.0;
-    final labelText = isChallenge
-        ? (Localizations.localeOf(context).languageCode == 'en'
-              ? 'Headline table'
-              : '主桌等級')
-        : isStarter
-        ? (Localizations.localeOf(context).languageCode == 'en'
-              ? 'Warm-up'
-              : '暖場局')
-        : (Localizations.localeOf(context).languageCode == 'en'
-              ? 'Steady pace'
-              : '進場局');
+    final outerRadius = compact ? 20.0 : 22.0;
+    final headerGap = compact ? 12.0 : 14.0;
+    final drinkCount = switch (section.levelKey) {
+      'gameLevelStarter' => 1,
+      'gameLevelClassic' => 2,
+      _ => 3,
+    };
+    final sectionLead = _sectionLead(context, section.levelKey);
 
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: isChallenge
-              ? [const Color(0xFF2D0F18), const Color(0xFF3A1220)]
-              : [style.surface, style.surfaceAlt],
+          colors: [
+            Color.alphaBlend(
+              style.accent.withValues(alpha: isChallenge ? 0.10 : 0.05),
+              const Color(0xFF41141E),
+            ),
+            const Color(0xFF2A1015),
+          ],
         ),
         borderRadius: BorderRadius.circular(outerRadius),
         border: Border.all(
-          color: style.border.withValues(alpha: isChallenge ? 0.82 : 0.34),
+          color: style.border.withValues(alpha: isChallenge ? 0.30 : 0.12),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: style.glow.withValues(alpha: isChallenge ? 0.3 : 0.12),
-            blurRadius: isChallenge ? 34 : 18,
-            offset: Offset(0, isChallenge ? 16 : 10),
-          ),
-        ],
       ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: isChallenge ? 5 : 4,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          compact ? 14 : 16,
+          compact ? 12 : 14,
+          compact ? 14 : 16,
+          compact ? 12 : 14,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              height: isChallenge ? 2.5 : 1,
+              width: isChallenge ? double.infinity : (compact ? 86 : 96),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    (isChallenge ? _goldAccent : style.accent).withValues(
-                      alpha: isChallenge ? 0.96 : 0.82,
-                    ),
-                    style.accent.withValues(alpha: 0.36),
+                    style.accent.withValues(alpha: isChallenge ? 0.90 : 0.72),
+                    style.accent.withValues(alpha: 0.14),
                   ],
                 ),
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(outerRadius),
-                ),
+                borderRadius: BorderRadius.circular(999),
               ),
             ),
-          ),
-          Positioned(
-            top: compact ? -16 : -22,
-            right: compact ? -24 : -18,
-            child: IgnorePointer(
-              child: Container(
-                width: compact ? (isChallenge ? 96 : 78) : 108,
-                height: compact ? (isChallenge ? 96 : 78) : 108,
-                decoration: BoxDecoration(
-                  color: (isChallenge ? _goldAccent : style.glow).withValues(
-                    alpha: isChallenge ? 0.28 : 0.12,
-                  ),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              blockPadding,
-              compact ? (isChallenge ? 12 : 10) : 16,
-              blockPadding,
-              blockPadding,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            SizedBox(height: compact ? 12 : 14),
+            Row(
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _TierIcon(style: style, compact: compact),
-                    SizedBox(width: compact ? 9 : 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        sectionLead,
+                        style: textTheme.labelSmall?.copyWith(
+                          color: style.accent.withValues(alpha: 0.92),
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.1,
+                          fontSize: compact ? 10 : 11,
+                        ),
+                      ),
+                      SizedBox(height: compact ? 6 : 8),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            labelText,
-                            style: textTheme.labelSmall?.copyWith(
-                              color: isChallenge
-                                  ? _goldAccent
-                                  : style.mutedText.withValues(alpha: 0.82),
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.7,
+                          Flexible(
+                            child: Text(
+                              PyramidPokerStrings.get(section.levelKey),
+                              style:
+                                  (compact
+                                          ? textTheme.titleLarge
+                                          : textTheme.headlineSmall)
+                                      ?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: isChallenge
+                                            ? (compact ? 22 : 24)
+                                            : (compact ? 19 : 22),
+                                      ),
                             ),
                           ),
-                          SizedBox(height: compact ? 1 : 3),
-                          Text(
-                            PyramidPokerStrings.get(section.levelKey),
-                            style:
-                                (compact
-                                        ? textTheme.titleMedium
-                                        : textTheme.titleLarge)
-                                    ?.copyWith(
-                                      color: style.text,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: compact
-                                          ? (isChallenge ? 19 : 16.5)
-                                          : null,
-                                    ),
-                          ),
-                          SizedBox(height: compact ? 1 : 4),
-                          Text(
-                            _menuText(
-                              context,
-                              section.hintKey,
-                              zh: section.hintFallbackZh,
-                              en: section.hintFallbackEn,
-                            ),
-                            maxLines: compact ? 1 : 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: textTheme.bodySmall?.copyWith(
-                              color: style.mutedText,
-                              fontWeight: FontWeight.w600,
-                              fontSize: compact
-                                  ? (isChallenge ? 11.2 : 10.5)
-                                  : null,
-                            ),
+                          SizedBox(width: compact ? 6 : 8),
+                          _DrinkLevelIcons(
+                            count: drinkCount,
+                            color: style.accent,
+                            compact: compact,
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: headerGap),
-                for (final entry in section.entries) ...[
-                  _GameMenuCard(
-                    entry: entry,
-                    levelKey: section.levelKey,
-                    compact: compact,
+                    ],
                   ),
-                  if (entry != section.entries.last) SizedBox(height: entryGap),
-                ],
+                ),
+                SizedBox(width: compact ? 10 : 12),
+                Text(
+                  '${section.entries.length} 款',
+                  style: textTheme.labelSmall?.copyWith(
+                    color: style.accent.withValues(
+                      alpha: isChallenge ? 0.96 : 0.82,
+                    ),
+                    fontWeight: FontWeight.w800,
+                    fontSize: compact ? 10 : 11,
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
+            SizedBox(height: compact ? 8 : 10),
+            Text(
+              _menuText(
+                context,
+                section.hintKey,
+                zh: section.hintFallbackZh,
+                en: section.hintFallbackEn,
+              ),
+              style: textTheme.bodySmall?.copyWith(
+                color: Colors.white.withValues(alpha: 0.72),
+                fontWeight: FontWeight.w600,
+                fontSize: compact ? 11 : 12,
+                height: 1.35,
+              ),
+            ),
+            SizedBox(height: headerGap),
+            for (final entry in section.entries) ...[
+              _GameMenuCard(
+                entry: entry,
+                levelKey: section.levelKey,
+                compact: compact,
+              ),
+              if (entry != section.entries.last)
+                Divider(
+                  height: compact ? 12 : 14,
+                  thickness: 1,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -503,177 +471,97 @@ class _GameMenuCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final style = _styleForLevel(levelKey);
-    final isChallenge = levelKey == 'gameLevelChallenge';
     final available = entry.isAvailable;
     final accent = available ? style.accent : AppTheme.secondaryAccent;
-    final cardColor = available
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.white.withValues(alpha: 0.04);
-    final padding = entry.featured
-        ? EdgeInsets.fromLTRB(
-            compact ? 12 : 18,
-            compact ? 12 : 18,
-            compact ? 12 : 18,
-            compact ? 12 : 18,
-          )
-        : EdgeInsets.fromLTRB(
-            compact ? 10 : 14,
-            compact ? 9 : 14,
-            compact ? 10 : 14,
-            compact ? 9 : 14,
-          );
+    final labelColor = available
+        ? _gameTitleColor(
+            entry,
+            levelKey,
+            style,
+          ).withValues(alpha: entry.featured ? 1 : 0.92)
+        : _gameTitleColor(entry, levelKey, style).withValues(alpha: 0.42);
+    final metaAccent = available ? accent : accent.withValues(alpha: 0.52);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: entry.onTap,
-        borderRadius: BorderRadius.circular(compact ? 20 : 22),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: entry.featured ? null : cardColor,
-            gradient: entry.featured
-                ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: isChallenge
-                        ? [const Color(0xFF5A1626), const Color(0xFF2B0F16)]
-                        : [style.tint.withValues(alpha: 0.94), style.surface],
-                  )
-                : null,
-            borderRadius: BorderRadius.circular(compact ? 20 : 22),
-            border: Border.all(
-              color: entry.featured
-                  ? (isChallenge ? _goldAccent : accent).withValues(
-                      alpha: isChallenge ? 0.62 : 0.46,
-                    )
-                  : available
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : Colors.white.withValues(alpha: 0.05),
-            ),
-            boxShadow: entry.featured
-                ? [
-                    BoxShadow(
-                      color: (isChallenge ? _goldAccent : accent).withValues(
-                        alpha: isChallenge ? 0.16 : 0.12,
-                      ),
-                      blurRadius: isChallenge ? 24 : 18,
-                      offset: const Offset(0, 10),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Padding(
-            padding: padding,
-            child: entry.featured
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        PyramidPokerStrings.get(entry.titleKey),
-                        style:
-                            (compact
-                                    ? textTheme.titleLarge
-                                    : textTheme.headlineSmall)
-                                ?.copyWith(
-                                  color: style.text,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: compact ? 20 : 26,
-                                ),
-                      ),
-                      if (entry.subtitleKey != null) ...[
-                        SizedBox(height: compact ? 6 : 8),
-                        Text(
-                          _menuText(
-                            context,
-                            entry.subtitleKey!,
-                            zh: entry.subtitleFallbackZh ?? '',
-                            en: entry.subtitleFallbackEn ?? '',
-                          ),
-                          maxLines: compact ? 2 : 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: style.mutedText,
-                            fontWeight: FontWeight.w600,
-                            height: compact ? 1.24 : 1.4,
-                            fontSize: compact ? 13.5 : null,
-                          ),
-                        ),
-                      ],
-                      SizedBox(height: compact ? 12 : 14),
-                      Row(
-                        children: [
-                          _PlayerPill(
-                            playerCountKey: entry.playerCountKey,
-                            accent: isChallenge ? _goldAccent : accent,
-                            compact: compact,
-                          ),
-                          SizedBox(width: compact ? 8 : 10),
-                          Text(
-                            Localizations.localeOf(context).languageCode == 'en'
-                                ? 'Tap to enter'
-                                : '點擊進入',
-                            style: textTheme.bodySmall?.copyWith(
-                              color: style.mutedText,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                          const Spacer(),
-                          Icon(
-                            Icons.arrow_forward_rounded,
-                            size: compact ? 18 : 20,
-                            color: isChallenge ? _goldAccent : accent,
-                          ),
-                        ],
-                      ),
-                    ],
-                  )
-                : Row(
-                    children: [
-                      Container(
-                        width: compact ? 5 : 8,
-                        height: compact ? 24 : 38,
-                        decoration: BoxDecoration(
-                          color: accent.withValues(
-                            alpha: available ? 0.88 : 0.32,
-                          ),
-                          borderRadius: BorderRadius.circular(99),
-                        ),
-                      ),
-                      SizedBox(width: compact ? 10 : 14),
-                      Expanded(
-                        child: Text(
-                          PyramidPokerStrings.get(entry.titleKey),
-                          style:
-                              (compact
-                                      ? textTheme.titleMedium
-                                      : textTheme.titleLarge)
-                                  ?.copyWith(
-                                    color: style.text.withValues(
-                                      alpha: available ? 1 : 0.68,
-                                    ),
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: compact ? 15.5 : null,
-                                  ),
-                        ),
-                      ),
-                      SizedBox(width: compact ? 6 : 10),
-                      _PlayerPill(
-                        playerCountKey: entry.playerCountKey,
-                        accent: accent,
-                        dimmed: !available,
-                        compact: compact,
-                      ),
-                      if (available) ...[
-                        SizedBox(width: compact ? 4 : 8),
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          size: compact ? 15 : 18,
-                          color: _goldAccent.withValues(alpha: 0.84),
-                        ),
-                      ],
-                    ],
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: compact ? 4 : 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (entry.featured) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
                   ),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: accent.withValues(alpha: 0.16)),
+                  ),
+                  child: Text(
+                    _menuText(
+                      context,
+                      'mainMenuFeatureLabel',
+                      zh: '今晚推薦玩法',
+                      en: 'Tonight\'s featured round',
+                    ),
+                    style: textTheme.labelSmall?.copyWith(
+                      color: accent.withValues(alpha: 0.96),
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                      fontSize: compact ? 9.5 : 10.5,
+                    ),
+                  ),
+                ),
+                SizedBox(height: compact ? 6 : 8),
+              ],
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      PyramidPokerStrings.get(entry.titleKey),
+                      style:
+                          (entry.featured
+                                  ? (compact
+                                        ? textTheme.titleMedium
+                                        : textTheme.titleLarge)
+                                  : (compact
+                                        ? textTheme.bodyLarge
+                                        : textTheme.titleMedium))
+                              ?.copyWith(
+                                color: labelColor,
+                                fontWeight: entry.featured
+                                    ? FontWeight.w800
+                                    : FontWeight.w700,
+                                fontSize: entry.featured
+                                    ? (compact ? 18 : 20)
+                                    : (compact ? 14 : 16),
+                              ),
+                    ),
+                  ),
+                  SizedBox(width: compact ? 8 : 10),
+                  _PlayerPill(
+                    playerCountKey: entry.playerCountKey,
+                    accent: metaAccent,
+                    dimmed: !available,
+                    compact: compact,
+                  ),
+                  if (available) ...[
+                    SizedBox(width: compact ? 8 : 10),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: compact ? 16 : 18,
+                      color: accent,
+                    ),
+                  ],
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -700,20 +588,20 @@ class _PlayerPill extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: compact ? 7 : 10,
-        vertical: compact ? 5 : 7,
+        horizontal: compact ? 8 : 10,
+        vertical: compact ? 4 : 6,
       ),
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: dimmed ? 0.1 : 0.16),
+        color: accent.withValues(alpha: dimmed ? 0.08 : 0.12),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accent.withValues(alpha: 0.18)),
+        border: Border.all(color: accent.withValues(alpha: 0.12)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             Icons.person_rounded,
-            size: compact ? 12 : 15,
+            size: compact ? 11 : 13,
             color: accent.withValues(alpha: dimmed ? 0.58 : 1),
           ),
           SizedBox(width: compact ? 2.5 : 4),
@@ -722,7 +610,7 @@ class _PlayerPill extends StatelessWidget {
             style: textTheme.bodySmall?.copyWith(
               color: accent.withValues(alpha: dimmed ? 0.7 : 1),
               fontWeight: FontWeight.w800,
-              fontSize: compact ? 10.5 : null,
+              fontSize: compact ? 10 : 11,
             ),
           ),
         ],
@@ -731,89 +619,29 @@ class _PlayerPill extends StatelessWidget {
   }
 }
 
-class _TierIcon extends StatelessWidget {
-  final _SectionStyle style;
-  final bool compact;
-
-  const _TierIcon({required this.style, required this.compact});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: compact ? 42 : 50,
-      height: compact ? 42 : 50,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.white.withValues(alpha: 0.08),
-            style.accent.withValues(alpha: 0.22),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: style.border.withValues(alpha: 0.42)),
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned(
-            right: 7,
-            top: 7,
-            child: Container(
-              width: compact ? 7 : 9,
-              height: compact ? 7 : 9,
-              decoration: BoxDecoration(
-                color: style.accent.withValues(alpha: 0.22),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Icon(style.icon, color: style.accent, size: compact ? 19 : 23),
-          Positioned(
-            bottom: compact ? 5 : 6,
-            child: _TierDots(
-              color: style.accent,
-              icon: style.icon,
-              compact: compact,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TierDots extends StatelessWidget {
+class _DrinkLevelIcons extends StatelessWidget {
+  final int count;
   final Color color;
-  final IconData icon;
   final bool compact;
 
-  const _TierDots({
+  const _DrinkLevelIcons({
+    required this.count,
     required this.color,
-    required this.icon,
     required this.compact,
   });
 
   @override
   Widget build(BuildContext context) {
-    var count = 3;
-    if (icon == Icons.local_bar_rounded) {
-      count = 1;
-    } else if (icon == Icons.sports_bar_rounded) {
-      count = 2;
-    }
-
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         for (var index = 0; index < count; index++) ...[
-          Container(
-            width: compact ? 3.5 : 4,
-            height: compact ? 3.5 : 4,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          Icon(
+            Icons.wine_bar_rounded,
+            size: compact ? 14 : 15,
+            color: color.withValues(alpha: 0.9),
           ),
-          if (index != count - 1) SizedBox(width: compact ? 2.5 : 3),
+          if (index != count - 1) SizedBox(width: compact ? 2 : 3),
         ],
       ],
     );

@@ -4,12 +4,20 @@ import '../../../core/card_game/models/playing_card.dart';
 import '../../../core/card_game/theme/card_palette.dart';
 import '../../../core/card_game/widgets/playing_card_widget.dart';
 
+const _pileGold = Color(0xFFE8C98D);
+const _pileText = Color(0xFFF8EEDA);
+const _pileBadgeTop = Color(0xFF5B1A24);
+const _pileBadgeBottom = Color(0xFF341219);
+
 class DeckPileWidget extends StatelessWidget {
   final List<PlayingCard> deck;
   final PlayingCard? currentDeckCard;
   final VoidCallback? onCurrentDeckCardFlipCompleted;
   final GlobalKey? currentDeckCardAnchorKey;
   final GlobalKey? pileAnchorKey;
+  final double cardFaceWidth;
+  final double cardFaceHeight;
+  final double stackOffset;
 
   const DeckPileWidget({
     super.key,
@@ -18,12 +26,15 @@ class DeckPileWidget extends StatelessWidget {
     this.onCurrentDeckCardFlipCompleted,
     this.currentDeckCardAnchorKey,
     this.pileAnchorKey,
+    this.cardFaceWidth = 50,
+    this.cardFaceHeight = 70,
+    this.stackOffset = 2.0,
   });
 
   @override
   Widget build(BuildContext context) {
-    final double pileWidth = 50;
-    final double pileHeight = 70 + deck.length * 2.0;
+    final double pileWidth = cardFaceWidth + 8;
+    final double pileHeight = cardFaceHeight + 8 + deck.length * stackOffset;
 
     return Align(
       alignment: Alignment.topCenter,
@@ -37,15 +48,15 @@ class DeckPileWidget extends StatelessWidget {
           children: [
             for (int i = 0; i < deck.length; i++)
               Positioned(
-                top: i * 2.0,
+                top: i * stackOffset,
                 child: CustomPaint(
                   painter: _PileBackPainter(),
-                  child: SizedBox(width: pileWidth, height: 70),
+                  child: SizedBox(width: pileWidth, height: cardFaceHeight + 8),
                 ),
               ),
             if (currentDeckCard != null)
               Positioned(
-                top: deck.length * 2.0,
+                top: deck.length * stackOffset,
                 child: Container(
                   key: currentDeckCardAnchorKey,
                   child: PlayingCardWidget(
@@ -54,6 +65,8 @@ class DeckPileWidget extends StatelessWidget {
                     flipDuration: const Duration(milliseconds: 500),
                     animateOnMountIfFaceUp: true,
                     onFlipCompleted: onCurrentDeckCardFlipCompleted,
+                    width: cardFaceWidth,
+                    height: cardFaceHeight,
                   ),
                 ),
               ),
@@ -63,14 +76,18 @@ class DeckPileWidget extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: CardPalette.badge,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [_pileBadgeTop, _pileBadgeBottom],
+                  ),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.white, width: 1),
+                  border: Border.all(color: _pileGold.withValues(alpha: 0.28)),
                 ),
                 child: Text(
                   '${deck.length}',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: _pileText,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
