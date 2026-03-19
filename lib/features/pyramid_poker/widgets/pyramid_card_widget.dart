@@ -11,6 +11,8 @@ class PyramidCardWidget extends StatelessWidget {
   final PlayingCard card;
   final int cardCount;
   final bool isSelected;
+  final double cardWidth;
+  final double cardHeight;
   final VoidCallback? onTap;
 
   const PyramidCardWidget({
@@ -18,6 +20,8 @@ class PyramidCardWidget extends StatelessWidget {
     required this.card,
     required this.cardCount,
     this.isSelected = false,
+    this.cardWidth = 50,
+    this.cardHeight = 70,
     this.onTap,
   });
 
@@ -53,6 +57,8 @@ class PyramidCardWidget extends StatelessWidget {
             card: card,
             onTap: onTap,
             flipDuration: const Duration(milliseconds: 250),
+            width: cardWidth,
+            height: cardHeight,
           ),
         ),
         Positioned(

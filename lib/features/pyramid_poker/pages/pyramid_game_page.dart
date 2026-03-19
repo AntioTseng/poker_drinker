@@ -40,6 +40,7 @@ class _PyramidGamePageState extends State<PyramidGamePage>
   double _manualRevealProgress = 0;
   Offset _manualRevealVector = const Offset(1, 0);
   bool _isManualRevealGestureLocked = false;
+  bool? _isCurrentGuessBigger;
 
   final GlobalKey _deckCardGlobalKey = GlobalKey();
   final GlobalKey _deckPileAnchorKey = GlobalKey();
@@ -47,12 +48,11 @@ class _PyramidGamePageState extends State<PyramidGamePage>
   late List<List<GlobalKey>> _pyramidCardKeys;
   late List<GlobalKey> _pyramidLayerRowKeys;
 
-  static const double _cardWidth = 58;
-  static const double _cardHeight = 78;
+  static const double _regularCardFaceWidth = 50;
+  static const double _regularCardFaceHeight = 70;
+  static const double _compactCardFaceWidth = 60;
+  static const double _compactCardFaceHeight = 84;
   static const double _rowLabelWidth = 70;
-  static const double _compactRowLabelWidth = 56;
-  static const double _cardSlotWidth = 60;
-  static const double _pyramidAreaWidth = _cardSlotWidth * 4;
   static const double _gameTableGap = 28;
 
   PlayingCard? _flyingDeckCard;
@@ -103,6 +103,7 @@ class _PyramidGamePageState extends State<PyramidGamePage>
     _manualRevealProgress = 0;
     _manualRevealVector = const Offset(1, 0);
     _isManualRevealGestureLocked = false;
+    _isCurrentGuessBigger = null;
   }
 
   void _coverImmediately() {
@@ -186,19 +187,27 @@ class _PyramidGamePageState extends State<PyramidGamePage>
     );
 
     if (startRect == null) {
+      final compact = _isCompactViewport;
       final pileRect = _rectForKey(
         _deckPileAnchorKey,
         ancestor: boardRenderObject,
       );
       if (pileRect != null) {
-        final double left = pileRect.left + (pileRect.width - _cardWidth) / 2;
+        final double left =
+            pileRect.left + (pileRect.width - _cardOuterWidthFor(compact)) / 2;
         final double top = pileRect.top + gameLogic.pyramid.deck.length * 2.0;
-        startRect = Rect.fromLTWH(left, top, _cardWidth, _cardHeight);
+        startRect = Rect.fromLTWH(
+          left,
+          top,
+          _cardOuterWidthFor(compact),
+          _cardOuterHeightFor(compact),
+        );
       }
     }
 
     Rect? resolvedEndRect = endRect;
     if (resolvedEndRect == null) {
+      final compact = _isCompactViewport;
       final rowRect = _rectForKey(
         _pyramidLayerRowKeys[gameLogic.selectedLayer!],
         ancestor: boardRenderObject,
@@ -206,17 +215,17 @@ class _PyramidGamePageState extends State<PyramidGamePage>
       if (rowRect != null) {
         final layerLen =
             gameLogic.pyramid.layers[gameLogic.selectedLayer!].length;
-        final totalWidth = layerLen * _cardSlotWidth;
+        final totalWidth = layerLen * _cardSlotWidthFor(compact);
         final startLeft = rowRect.left + (rowRect.width - totalWidth) / 2;
         final left =
             startLeft +
-            (gameLogic.selectedIndex! * _cardSlotWidth) +
-            ((_cardSlotWidth - _cardWidth) / 2);
+            (gameLogic.selectedIndex! * _cardSlotWidthFor(compact)) +
+            ((_cardSlotWidthFor(compact) - _cardOuterWidthFor(compact)) / 2);
         resolvedEndRect = Rect.fromLTWH(
           left,
           rowRect.top,
-          _cardWidth,
-          _cardHeight,
+          _cardOuterWidthFor(compact),
+          _cardOuterHeightFor(compact),
         );
       }
     }
@@ -319,6 +328,8 @@ class _PyramidGamePageState extends State<PyramidGamePage>
 
   Future<void> _handleGuess({required bool isBiggerGuess}) async {
     setState(() {
+      _isCurrentGuessBigger = isBiggerGuess;
+
       if (isBiggerGuess) {
         gameLogic.guessBigger();
       } else {
@@ -461,6 +472,309 @@ class _PyramidGamePageState extends State<PyramidGamePage>
         : 'Reveal the next card to test your guess';
   }
 
+  String get _actionConsolePrompt {
+    return _isZhLocale
+        ? '判斷下一張更大還是更小'
+        : 'Call whether the next card will be higher or lower';
+  }
+
+  String get _currentGuessSymbol {
+    if (_isCurrentGuessBigger == null) {
+      return '?';
+    }
+    return _isCurrentGuessBigger! ? '<' : '>';
+  }
+
+  PlayingCard? get _visibleDeckPileCard {
+    if (_isManualRevealActive || _isCoverAnimating) {
+      return null;
+    }
+    return gameLogic.currentDeckCard;
+  }
+
+  double _basePenaltyForLayer({
+    required int layerIndex,
+    required int cardCount,
+  }) {
+    final multiplier = gameLogic.settings.multiplierForLayer(layerIndex);
+    return multiplier * cardCount * gameLogic.settings.initialUnit;
+  }
+
+  Future<void> _showInfoSheet({
+    required String title,
+    String? subtitle,
+    required List<MapEntry<String, String>> items,
+  }) {
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        final textTheme = Theme.of(context).textTheme;
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [_gamePanelTop, _gamePanelBottom],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: _gameGold.withValues(alpha: 0.16)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x33000000),
+                    blurRadius: 22,
+                    offset: Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: _gameGold.withValues(alpha: 0.24),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      title,
+                      style: textTheme.titleLarge?.copyWith(
+                        color: _gameText,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: _gameMuted,
+                          height: 1.4,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 14),
+                    for (final item in items) ...[
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: _gameGold.withValues(alpha: 0.08),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                item.key,
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: _gameMuted,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Flexible(
+                              child: Text(
+                                item.value,
+                                textAlign: TextAlign.right,
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: _gameText,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showDeckPileInfoSheet() {
+    return _showInfoSheet(
+      title: _isZhLocale ? '母牌堆資訊' : 'Draw pile info',
+      subtitle: _isZhLocale
+          ? '長按母牌堆可快速查看目前剩餘牌數。'
+          : 'Long press the draw pile to check how many cards remain.',
+      items: [
+        MapEntry(
+          _isZhLocale ? '目前母牌堆張數' : 'Cards remaining',
+          '${gameLogic.pyramid.deck.length}',
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showPileInfoSheet({
+    required int layerIndex,
+    required int cardIndex,
+  }) {
+    final cardCount = gameLogic.pileCardCountFor(layerIndex, cardIndex);
+    final multiplier = gameLogic.settings.multiplierForLayer(layerIndex);
+    final unit = gameLogic.settings.initialUnit;
+    final tieMultiplier = gameLogic.settings.tiePenalty;
+    final loseCups = _basePenaltyForLayer(
+      layerIndex: layerIndex,
+      cardCount: cardCount,
+    );
+    final tieCups = loseCups * tieMultiplier;
+    final loseFormula =
+        '${_formatNumber(loseCups)} = $cardCount × $multiplier × ${_formatNumber(unit)}';
+    final tieFormula =
+        '${_formatNumber(tieCups)} = $cardCount × $multiplier × ${_formatNumber(unit)} × ${_formatNumber(tieMultiplier)}';
+
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [_gamePanelTop, _gamePanelBottom],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: _gameGold.withValues(alpha: 0.16)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x33000000),
+                    blurRadius: 22,
+                    offset: Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: _gameGold.withValues(alpha: 0.24),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _buildFormulaCard(
+                      label: _isZhLocale ? '如果輸' : 'If you lose',
+                      formula: loseFormula,
+                      note: _isZhLocale
+                          ? '$cardCount=這疊張數，$multiplier=這層倍率，${_formatNumber(unit)}=單位杯數'
+                          : '$cardCount = pile cards, $multiplier = layer multiplier, ${_formatNumber(unit)} = unit cups',
+                    ),
+                    const SizedBox(height: 10),
+                    _buildFormulaCard(
+                      label: _isZhLocale ? '如果撞柱' : 'If it ties',
+                      formula: tieFormula,
+                      note: _isZhLocale
+                          ? '$cardCount=這疊張數，$multiplier=這層倍率，${_formatNumber(unit)}=單位杯數，${_formatNumber(tieMultiplier)}=撞柱倍率'
+                          : '$cardCount = pile cards, $multiplier = layer multiplier, ${_formatNumber(unit)} = unit cups, ${_formatNumber(tieMultiplier)} = tie multiplier',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFormulaCard({
+    required String label,
+    required String formula,
+    required String note,
+  }) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            _gameGold.withValues(alpha: 0.12),
+            Colors.white.withValues(alpha: 0.04),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _gameGold.withValues(alpha: 0.14)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: textTheme.labelSmall?.copyWith(
+              color: _gameGold,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            formula,
+            style: textTheme.titleLarge?.copyWith(
+              color: _gameText,
+              fontWeight: FontWeight.w900,
+              height: 1.05,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            note,
+            style: textTheme.bodySmall?.copyWith(
+              color: _gameMuted,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   String get _resultHeadline {
     return _didPlayerLose
         ? (_isZhLocale ? '猜錯了' : 'Wrong Guess')
@@ -476,33 +790,44 @@ class _PyramidGamePageState extends State<PyramidGamePage>
     return _isZhLocale ? '不用喝' : 'No penalty';
   }
 
-  String get _resultComparisonMessage {
+  bool get _isTieResult {
     final selectedCard = gameLogic.selectedCard;
     final deckCard = gameLogic.currentDeckCard;
+    return selectedCard != null &&
+        deckCard != null &&
+        selectedCard.rank == deckCard.rank;
+  }
 
-    if (selectedCard == null || deckCard == null) {
+  String get _resultAmountValue => _formatNumber(gameLogic.penalty);
+
+  String get _resultAmountUnit {
+    return _isZhLocale ? '杯' : 'cups';
+  }
+
+  String get _penaltyEquation {
+    if (!_didPlayerLose || gameLogic.selectedLayer == null) {
       return '';
     }
 
-    if (deckCard.rank == selectedCard.rank) {
-      return _isZhLocale
-          ? '${deckCard.rankLabel} = ${selectedCard.rankLabel}'
-          : '${deckCard.rankLabel} = ${selectedCard.rankLabel}';
+    final int layerMultiplier = gameLogic.settings.multiplierForLayer(
+      gameLogic.selectedLayer!,
+    );
+    final int cardCount = gameLogic.selectedPileCardCount;
+    final String unitValue = _formatNumber(gameLogic.settings.initialUnit);
+    final List<String> factors = <String>[
+      '$layerMultiplier',
+      '$cardCount',
+      unitValue,
+    ];
+
+    if (_isTieResult) {
+      factors.add(_formatNumber(gameLogic.settings.tiePenalty));
     }
 
-    final bool isHigher = deckCard.rank > selectedCard.rank;
-    if (_isZhLocale) {
-      return isHigher
-          ? '${deckCard.rankLabel} > ${selectedCard.rankLabel}'
-          : '${deckCard.rankLabel} < ${selectedCard.rankLabel}';
-    }
-
-    return isHigher
-        ? '${deckCard.rankLabel} > ${selectedCard.rankLabel}'
-        : '${deckCard.rankLabel} < ${selectedCard.rankLabel}';
+    return factors.join(' × ');
   }
 
-  String get _penaltyBreakdownFormula {
+  String get _penaltyNumberLegend {
     if (!_didPlayerLose || gameLogic.selectedLayer == null) {
       return '';
     }
@@ -515,30 +840,20 @@ class _PyramidGamePageState extends State<PyramidGamePage>
     final String unitValue = _formatNumber(gameLogic.settings.initialUnit);
     final List<String> parts = <String>[
       _isZhLocale
-          ? '第$layerNumber層×$layerMultiplier'
-          : 'L$layerNumber×$layerMultiplier',
-      _isZhLocale ? '$cardCount張' : '$cardCount cards',
-      _isZhLocale ? '$unitValue杯' : '$unitValue cup',
+          ? '$layerMultiplier=第$layerNumber層倍率'
+          : '$layerMultiplier = row $layerNumber multiplier',
+      _isZhLocale ? '$cardCount=這疊張數' : '$cardCount = pile cards',
+      _isZhLocale ? '$unitValue=單位杯數' : '$unitValue = unit cups',
     ];
 
-    final selectedCard = gameLogic.selectedCard;
-    final deckCard = gameLogic.currentDeckCard;
-    final bool isTie =
-        selectedCard != null &&
-        deckCard != null &&
-        selectedCard.rank == deckCard.rank;
-    if (isTie) {
+    if (_isTieResult) {
+      final String tieMultiplier = _formatNumber(gameLogic.settings.tiePenalty);
       parts.add(
-        _isZhLocale
-            ? '撞柱×${_formatNumber(gameLogic.settings.tiePenalty)}'
-            : 'tie×${_formatNumber(gameLogic.settings.tiePenalty)}',
+        _isZhLocale ? '$tieMultiplier=撞柱倍率' : '$tieMultiplier = tie multiplier',
       );
     }
 
-    final String total = _isZhLocale
-        ? '= ${_formatNumber(gameLogic.penalty)}杯'
-        : '= ${_formatNumber(gameLogic.penalty)} cups';
-    return '${parts.join(' · ')}  $total';
+    return parts.join('  ·  ');
   }
 
   void _handleManualRevealContinue() {
@@ -548,28 +863,6 @@ class _PyramidGamePageState extends State<PyramidGamePage>
 
     setState(_resetManualRevealState);
     _triggerCoverAnimationAfterRevealClose();
-  }
-
-  IconData _iconForRevealVector() {
-    final dx = _manualRevealVector.dx;
-    final dy = _manualRevealVector.dy;
-
-    if (dx.abs() > dy.abs() * 1.4) {
-      return dx >= 0 ? Icons.west_rounded : Icons.east_rounded;
-    }
-    if (dy.abs() > dx.abs() * 1.4) {
-      return dy >= 0 ? Icons.north_rounded : Icons.south_rounded;
-    }
-    if (dx >= 0 && dy >= 0) {
-      return Icons.north_west_rounded;
-    }
-    if (dx < 0 && dy >= 0) {
-      return Icons.north_east_rounded;
-    }
-    if (dx >= 0 && dy < 0) {
-      return Icons.south_west_rounded;
-    }
-    return Icons.south_east_rounded;
   }
 
   Widget _buildManualRevealOverlay() {
@@ -582,7 +875,7 @@ class _PyramidGamePageState extends State<PyramidGamePage>
 
     return Positioned.fill(
       child: ColoredBox(
-        color: Colors.black.withValues(alpha: 0.34),
+        color: Colors.black.withValues(alpha: 0.46),
         child: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
@@ -615,7 +908,7 @@ class _PyramidGamePageState extends State<PyramidGamePage>
                         opacity: _isManualRevealResultVisible ? 0.72 : 1,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             _buildManualRevealCardFrame(
                               child: PlayingCardWidget(
@@ -628,37 +921,123 @@ class _PyramidGamePageState extends State<PyramidGamePage>
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
-                                vertical: 56,
                               ),
-                              child: AnimatedOpacity(
-                                duration: const Duration(milliseconds: 180),
-                                opacity: _isManualRevealCompleted ? 0 : 1,
-                                child: Icon(
-                                  _iconForRevealVector(),
-                                  color: _gameGold,
-                                  size: 30,
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.06),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: _gameGold.withValues(alpha: 0.18),
+                                  ),
+                                ),
+                                child: Text(
+                                  _currentGuessSymbol,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall
+                                      ?.copyWith(
+                                        color: _gameGold,
+                                        fontWeight: FontWeight.w900,
+                                        height: 1,
+                                      ),
                                 ),
                               ),
                             ),
-                            GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTapUp: _handleManualRevealTap,
-                              onPanStart: _handleManualRevealPanStart,
-                              onPanUpdate: _handleManualRevealPanUpdate,
-                              onPanEnd: _handleManualRevealPanEnd,
-                              child: _buildManualRevealCardFrame(
-                                accent: _manualRevealProgress > 0
-                                    ? _gameGold
-                                    : const Color(0xFFB57462),
-                                child: PlayingCardWidget(
-                                  card: deckCard,
-                                  width: _manualRevealWidth,
-                                  height: _manualRevealHeight,
-                                  flipDuration: Duration.zero,
-                                  flipProgress: _manualRevealProgress,
-                                  flipVector: _manualRevealVector,
+                            Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTapUp: _handleManualRevealTap,
+                                  onPanStart: _handleManualRevealPanStart,
+                                  onPanUpdate: _handleManualRevealPanUpdate,
+                                  onPanEnd: _handleManualRevealPanEnd,
+                                  child: _buildManualRevealCardFrame(
+                                    accent: _manualRevealProgress > 0
+                                        ? _gameGold
+                                        : const Color(0xFFB57462),
+                                    child: PlayingCardWidget(
+                                      card: deckCard,
+                                      width: _manualRevealWidth,
+                                      height: _manualRevealHeight,
+                                      flipDuration: Duration.zero,
+                                      flipProgress: _manualRevealProgress,
+                                      flipVector: _manualRevealVector,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                Positioned(
+                                  top: -16,
+                                  left: 0,
+                                  right: 0,
+                                  child: AnimatedOpacity(
+                                    duration: const Duration(milliseconds: 180),
+                                    opacity: _isManualRevealCompleted ? 0 : 1,
+                                    child: Center(
+                                      child: DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              _gamePanelTop.withValues(
+                                                alpha: 0.92,
+                                              ),
+                                              _gamePanelBottom.withValues(
+                                                alpha: 0.92,
+                                              ),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            999,
+                                          ),
+                                          border: Border.all(
+                                            color: _gameGold.withValues(
+                                              alpha: 0.14,
+                                            ),
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.12,
+                                              ),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 4,
+                                          ),
+                                          child: Text(
+                                            _isZhLocale
+                                                ? '點擊/拉動'
+                                                : 'Tap / drag',
+                                            textAlign: TextAlign.center,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelSmall
+                                                ?.copyWith(
+                                                  color: _gameText.withValues(
+                                                    alpha: 0.8,
+                                                  ),
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 9.5,
+                                                  letterSpacing: 0.25,
+                                                  height: 1,
+                                                ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -698,6 +1077,8 @@ class _PyramidGamePageState extends State<PyramidGamePage>
 
   Widget _buildManualRevealResultSection() {
     final textTheme = Theme.of(context).textTheme;
+    final bool showPenaltyBreakdown =
+        _didPlayerLose && _penaltyEquation.isNotEmpty;
 
     return Padding(
       key: const ValueKey('manual-reveal-result'),
@@ -732,98 +1113,114 @@ class _PyramidGamePageState extends State<PyramidGamePage>
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                        color: _resultAccentColor.withValues(alpha: 0.22),
-                      ),
-                    ),
-                    child: Text(
-                      _resultHeadline,
-                      textAlign: TextAlign.center,
-                      style: textTheme.titleLarge?.copyWith(
-                        color: _resultAccentColor,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    _resultPrimaryMessage,
-                    textAlign: TextAlign.center,
-                    style:
-                        (_didPlayerLose
-                                ? textTheme.displaySmall
-                                : textTheme.headlineMedium)
-                            ?.copyWith(
-                              color: _resultAccentColor,
-                              fontWeight: FontWeight.w900,
-                              height: 0.98,
-                            ),
-                  ),
-                  if (_resultComparisonMessage.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Container(
+                  Align(
+                    alignment: Alignment.center,
+                    child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
+                        horizontal: 14,
+                        vertical: 7,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
+                        color: Colors.white.withValues(alpha: 0.07),
                         borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: _resultAccentColor.withValues(alpha: 0.18),
+                        ),
                       ),
                       child: Text(
-                        _resultComparisonMessage,
+                        _resultHeadline,
                         textAlign: TextAlign.center,
                         style: textTheme.titleMedium?.copyWith(
-                          color: _gameText,
+                          color: _resultAccentColor,
                           fontWeight: FontWeight.w800,
+                          letterSpacing: 0.3,
                         ),
                       ),
                     ),
-                  ],
-                  if (_didPlayerLose &&
-                      _penaltyBreakdownFormula.isNotEmpty) ...[
-                    const SizedBox(height: 14),
+                  ),
+                  const SizedBox(height: 18),
+                  if (_didPlayerLose) ...[
+                    Text(
+                      _isZhLocale ? '這回合要喝' : 'Penalty',
+                      textAlign: TextAlign.center,
+                      style: textTheme.labelLarge?.copyWith(
+                        color: _gameMuted,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: _resultAmountValue,
+                            style: textTheme.displayMedium?.copyWith(
+                              color: _resultAccentColor,
+                              fontWeight: FontWeight.w900,
+                              height: 0.95,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ' $_resultAmountUnit',
+                            style: textTheme.headlineSmall?.copyWith(
+                              color: _resultAccentColor,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else
+                    Text(
+                      _resultPrimaryMessage,
+                      textAlign: TextAlign.center,
+                      style: textTheme.headlineMedium?.copyWith(
+                        color: _resultAccentColor,
+                        fontWeight: FontWeight.w900,
+                        height: 0.98,
+                      ),
+                    ),
+                  if (showPenaltyBreakdown) ...[
+                    const SizedBox(height: 16),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.06),
+                        color: Colors.white.withValues(alpha: 0.035),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: _resultAccentColor.withValues(alpha: 0.12),
+                          color: _resultAccentColor.withValues(alpha: 0.08),
                         ),
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            _isZhLocale ? '計算方式' : 'Calculation',
+                            _penaltyEquation,
                             textAlign: TextAlign.center,
-                            style: textTheme.bodySmall?.copyWith(
-                              color: _resultAccentColor.withValues(alpha: 0.82),
+                            style: textTheme.titleMedium?.copyWith(
+                              color: _gameText.withValues(alpha: 0.72),
                               fontWeight: FontWeight.w700,
+                              height: 1.05,
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            _penaltyBreakdownFormula,
-                            textAlign: TextAlign.center,
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: _gameText,
-                              fontWeight: FontWeight.w800,
-                              height: 1.4,
+                          if (_penaltyNumberLegend.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              _penaltyNumberLegend,
+                              textAlign: TextAlign.center,
+                              style: textTheme.bodySmall?.copyWith(
+                                color: _gameMuted.withValues(alpha: 0.74),
+                                fontWeight: FontWeight.w500,
+                                height: 1.35,
+                              ),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     ),
@@ -846,10 +1243,51 @@ class _PyramidGamePageState extends State<PyramidGamePage>
   }
 
   double _rowLabelWidthFor(bool compact) {
-    return compact ? _compactRowLabelWidth : _rowLabelWidth;
+    return compact ? 0 : _rowLabelWidth;
   }
 
-  double get _compactStageWidth => _rowLabelWidthFor(true) + _pyramidAreaWidth;
+  double _cardFaceWidthFor(bool compact) {
+    return compact ? _compactCardFaceWidth : _regularCardFaceWidth;
+  }
+
+  double _cardFaceHeightFor(bool compact) {
+    return compact ? _compactCardFaceHeight : _regularCardFaceHeight;
+  }
+
+  double _cardOuterWidthFor(bool compact) {
+    return _cardFaceWidthFor(compact) + 8;
+  }
+
+  double _cardOuterHeightFor(bool compact) {
+    return _cardFaceHeightFor(compact) + 8;
+  }
+
+  double _cardSlotWidthFor(bool compact) {
+    return compact ? 70 : 60;
+  }
+
+  double _pyramidAreaWidthFor(bool compact) {
+    return _cardSlotWidthFor(compact) * 4;
+  }
+
+  bool get _isCompactViewport {
+    if (!mounted) {
+      return false;
+    }
+    return MediaQuery.sizeOf(context).width < 520;
+  }
+
+  double get _compactStageWidth =>
+      _rowLabelWidthFor(true) + _pyramidAreaWidthFor(true);
+
+  bool get _canUseCompactSingleColumnStage {
+    if (!mounted) {
+      return false;
+    }
+
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    return _compactStageWidth <= viewportWidth - 32;
+  }
 
   Widget _buildMultiplierRailItem({
     required int layerIndex,
@@ -859,24 +1297,24 @@ class _PyramidGamePageState extends State<PyramidGamePage>
   }) {
     final multiplier = gameLogic.settings.multiplierForLayer(layerIndex);
     final railWidth = _rowLabelWidthFor(compact);
-    final markerLeft = compact ? 6.0 : 8.0;
-    final lineLeft = compact ? 11.0 : 14.0;
-    final connectorLeft = compact ? 16.0 : 20.0;
-    final connectorRight = compact ? 8.0 : 10.0;
-    final markerSize = compact ? 12.0 : 14.0;
-    final pillVertical = compact ? 4.0 : 5.0;
-    final pillHorizontal = compact ? 8.0 : 10.0;
+    final markerLeft = compact ? 2.0 : 8.0;
+    final lineLeft = compact ? 7.0 : 14.0;
+    final connectorLeft = compact ? 12.0 : 20.0;
+    final connectorRight = compact ? 3.0 : 10.0;
+    final markerSize = compact ? 10.0 : 14.0;
+    final pillVertical = compact ? 3.0 : 5.0;
+    final pillHorizontal = compact ? 6.0 : 10.0;
 
     return SizedBox(
       width: railWidth,
-      height: _cardHeight + 8,
+      height: _cardOuterHeightFor(compact),
       child: Stack(
         alignment: Alignment.centerRight,
         children: [
           Positioned(
             left: lineLeft,
-            top: isFirst ? (_cardHeight + 8) / 2 : 0,
-            bottom: isLast ? (_cardHeight + 8) / 2 : 0,
+            top: isFirst ? _cardOuterHeightFor(compact) / 2 : 0,
+            bottom: isLast ? _cardOuterHeightFor(compact) / 2 : 0,
             child: Container(
               width: 2,
               decoration: BoxDecoration(
@@ -938,7 +1376,7 @@ class _PyramidGamePageState extends State<PyramidGamePage>
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   color: AppTheme.primaryAccent,
                   fontWeight: FontWeight.w800,
-                  fontSize: compact ? 11 : null,
+                  fontSize: compact ? 10 : null,
                 ),
               ),
             ),
@@ -963,14 +1401,15 @@ class _PyramidGamePageState extends State<PyramidGamePage>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _buildMultiplierRailItem(
-                layerIndex: layerIndex,
-                isFirst: isFirst,
-                isLast: isLast,
-                compact: compact,
-              ),
+              if (!compact)
+                _buildMultiplierRailItem(
+                  layerIndex: layerIndex,
+                  isFirst: isFirst,
+                  isLast: isLast,
+                  compact: compact,
+                ),
               SizedBox(
-                width: _pyramidAreaWidth,
+                width: _pyramidAreaWidthFor(compact),
                 child: SizedBox(
                   key: _pyramidLayerRowKeys[layerIndex],
                   child: Row(
@@ -980,23 +1419,32 @@ class _PyramidGamePageState extends State<PyramidGamePage>
                       final PlayingCard card = cardEntry.value;
 
                       return SizedBox(
-                        width: _cardSlotWidth,
+                        width: _cardSlotWidthFor(compact),
                         key: _pyramidCardKeys[layerIndex][cardIndex],
-                        child: Center(
-                          child: PyramidCardWidget(
-                            card: card,
-                            cardCount: gameLogic.pileCardCountFor(
-                              layerIndex,
-                              cardIndex,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onLongPress: () => _showPileInfoSheet(
+                            layerIndex: layerIndex,
+                            cardIndex: cardIndex,
+                          ),
+                          child: Center(
+                            child: PyramidCardWidget(
+                              card: card,
+                              cardWidth: _cardFaceWidthFor(compact),
+                              cardHeight: _cardFaceHeightFor(compact),
+                              cardCount: gameLogic.pileCardCountFor(
+                                layerIndex,
+                                cardIndex,
+                              ),
+                              isSelected:
+                                  gameLogic.selectedLayer == layerIndex &&
+                                  gameLogic.selectedIndex == cardIndex,
+                              onTap: () {
+                                setState(() {
+                                  gameLogic.selectCard(layerIndex, cardIndex);
+                                });
+                              },
                             ),
-                            isSelected:
-                                gameLogic.selectedLayer == layerIndex &&
-                                gameLogic.selectedIndex == cardIndex,
-                            onTap: () {
-                              setState(() {
-                                gameLogic.selectCard(layerIndex, cardIndex);
-                              });
-                            },
                           ),
                         ),
                       );
@@ -1039,11 +1487,11 @@ class _PyramidGamePageState extends State<PyramidGamePage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _isZhLocale ? '你的判斷' : 'Your call',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: _gameGold,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.0,
+                _actionConsolePrompt,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: _gameText.withValues(alpha: 0.88),
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
                 ),
               ),
               const SizedBox(height: 10),
@@ -1082,84 +1530,264 @@ class _PyramidGamePageState extends State<PyramidGamePage>
     );
   }
 
-  Widget _buildCompactDeckHeader() {
+  Widget _buildCompactSelectedSection() {
+    return _buildGuessButtons(compact: true);
+  }
+
+  Widget _buildCompactDeckPile() {
     final compactDeckWidget = DeckPileWidget(
       deck: gameLogic.pyramid.deck,
-      currentDeckCard: gameLogic.currentDeckCard,
+      currentDeckCard: _visibleDeckPileCard,
       currentDeckCardAnchorKey: _deckCardGlobalKey,
       pileAnchorKey: _deckPileAnchorKey,
-      cardFaceWidth: 42,
-      cardFaceHeight: 60,
-      stackOffset: 0.65,
+      cardFaceWidth: _cardFaceWidthFor(true),
+      cardFaceHeight: _cardFaceHeightFor(true),
+      stackOffset: 0.42,
     );
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.035),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _gameGold.withValues(alpha: 0.1)),
+    return Padding(
+      padding: const EdgeInsets.only(right: 2),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onLongPress: _showDeckPileInfoSheet,
+        child: compactDeckWidget,
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 58,
-            height: 84,
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _gameGold.withValues(alpha: 0.12)),
-            ),
-            child: Center(child: compactDeckWidget),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _deckPanelTitle,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: _gameGold,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.0,
+    );
+  }
+
+  Widget _buildCompactSettingsNote() {
+    final settings = gameLogic.settings;
+    final textTheme = Theme.of(context).textTheme;
+    final panelHeight = _cardOuterHeightFor(true);
+    final summaryEntries = <String>[
+      _isZhLocale
+          ? '初始單位 ${_formatNumber(settings.initialUnit)}杯'
+          : 'Unit ${_formatNumber(settings.initialUnit)}',
+      _isZhLocale
+          ? '撞柱 x${_formatNumber(settings.tiePenalty)}'
+          : 'Tie x${_formatNumber(settings.tiePenalty)}',
+    ];
+    final layerEntries = <String>[
+      '${_isZhLocale ? '1層' : 'L1'} x${settings.layer1Multiplier.toInt()}',
+      '${_isZhLocale ? '2層' : 'L2'} x${settings.layer2Multiplier.toInt()}',
+      '${_isZhLocale ? '3層' : 'L3'} x${settings.layer3Multiplier.toInt()}',
+      '${_isZhLocale ? '4層' : 'L4'} x${settings.layer4Multiplier.toInt()}',
+    ];
+    final stakesTextStyle = textTheme.labelSmall?.copyWith(
+      color: _gameGold,
+      fontWeight: FontWeight.w800,
+      fontSize: 10.2,
+      letterSpacing: 0.2,
+      height: 1,
+    );
+
+    return Align(
+      alignment: Alignment.topLeft,
+      child: SizedBox(
+        height: panelHeight,
+        width: double.infinity,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      _gamePanelTop.withValues(alpha: 0.96),
+                      _gamePanelBottom.withValues(alpha: 0.98),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _isZhLocale
-                      ? '主桌用牌，保持輕量呈現。'
-                      : 'Support deck, kept visually secondary.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: _gameMuted.withValues(alpha: 0.82),
-                    height: 1.3,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(18),
+                    topRight: Radius.circular(18),
+                    bottomRight: Radius.circular(18),
+                    bottomLeft: Radius.circular(12),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _buildInfoChip(
-                      icon: Icons.style_rounded,
-                      text: _isZhLocale
-                          ? '剩餘 ${gameLogic.pyramid.deck.length} 張'
-                          : '${gameLogic.pyramid.deck.length} cards left',
-                      compact: true,
-                    ),
-                    _buildInfoChip(
-                      icon: Icons.local_bar_rounded,
-                      text: _isZhLocale
-                          ? '單位 ${_formatNumber(gameLogic.settings.initialUnit)} 杯'
-                          : 'Unit ${_formatNumber(gameLogic.settings.initialUnit)} cup',
-                      compact: true,
+                  border: Border.all(color: _gameGold.withValues(alpha: 0.15)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.16),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
-              ],
+              ),
+            ),
+            Positioned(
+              right: -14,
+              top: -10,
+              child: Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  color: _gameGold.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Positioned(
+              left: 10,
+              top: 9,
+              child: Container(
+                width: 58,
+                height: 1.6,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      _gameGold.withValues(alpha: 0.82),
+                      _gameGold.withValues(alpha: 0.14),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 14, 10, 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: _gameGold.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: _gameGold.withValues(alpha: 0.16),
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.tune_rounded,
+                      size: 15,
+                      color: _gameGold.withValues(alpha: 0.88),
+                    ),
+                  ),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: Row(
+                            children: summaryEntries
+                                .map(
+                                  (entry) => Padding(
+                                    padding: const EdgeInsets.only(right: 4),
+                                    child: _buildCompactSettingsChip(
+                                      entry,
+                                      textStyle: stakesTextStyle,
+                                      textColor: _gameGold,
+                                      backgroundColor: _gameGold.withValues(
+                                        alpha: 0.08,
+                                      ),
+                                      borderColor: _gameGold.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: Row(
+                            children: layerEntries
+                                .map(
+                                  (entry) => Padding(
+                                    padding: const EdgeInsets.only(right: 4),
+                                    child: _buildCompactSettingsChip(
+                                      entry,
+                                      textStyle: stakesTextStyle,
+                                      textColor: _gameGold,
+                                      backgroundColor: _gameGold.withValues(
+                                        alpha: 0.08,
+                                      ),
+                                      borderColor: _gameGold.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactSettingsChip(
+    String text, {
+    TextStyle? textStyle,
+    required Color textColor,
+    required Color backgroundColor,
+    required Color borderColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: borderColor),
+      ),
+      child: Text(
+        text,
+        style:
+            textStyle?.copyWith(color: textColor, fontSize: 9.4) ??
+            Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: textColor,
+              fontWeight: FontWeight.w800,
+              fontSize: 9.4,
+              height: 1,
+              letterSpacing: 0.2,
+            ),
+      ),
+    );
+  }
+
+  Widget _buildGameBackgroundDecor() {
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          Positioned(
+            right: -42,
+            top: -18,
+            child: Container(
+              width: 160,
+              height: 160,
+              decoration: BoxDecoration(
+                color: _gameGold.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Positioned(
+            left: -54,
+            top: 220,
+            child: Container(
+              width: 116,
+              height: 116,
+              decoration: BoxDecoration(
+                color: _gameGold.withValues(alpha: 0.03),
+                shape: BoxShape.circle,
+              ),
             ),
           ),
         ],
@@ -1178,36 +1806,38 @@ class _PyramidGamePageState extends State<PyramidGamePage>
               gameLogic.selectedCard!.isFaceUp)
             SizedBox(
               width: _compactStageWidth,
-              child: _buildGuessButtons(compact: true),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: _buildCompactSelectedSection(),
+              ),
             ),
         ],
       ),
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth >= _compactStageWidth) {
-          return stage;
-        }
+    if (_canUseCompactSingleColumnStage) {
+      return Center(child: stage);
+    }
 
-        return SizedBox(
-          width: double.infinity,
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.topCenter,
-            child: stage,
-          ),
-        );
-      },
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: stage,
+      ),
     );
   }
 
   Widget _buildDeckArea({required bool compact}) {
     final deckWidget = DeckPileWidget(
       deck: gameLogic.pyramid.deck,
-      currentDeckCard: gameLogic.currentDeckCard,
+      currentDeckCard: _visibleDeckPileCard,
       currentDeckCardAnchorKey: _deckCardGlobalKey,
       pileAnchorKey: _deckPileAnchorKey,
+      cardFaceWidth: _cardFaceWidthFor(compact),
+      cardFaceHeight: _cardFaceHeightFor(compact),
+      stackOffset: compact ? 0.48 : 0.62,
     );
 
     if (compact) {
@@ -1302,7 +1932,13 @@ class _PyramidGamePageState extends State<PyramidGamePage>
             ),
           ),
           const SizedBox(height: 16),
-          Center(child: deckWidget),
+          Center(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onLongPress: _showDeckPileInfoSheet,
+              child: deckWidget,
+            ),
+          ),
           const SizedBox(height: 16),
           Wrap(
             spacing: 10,
@@ -1336,25 +1972,31 @@ class _PyramidGamePageState extends State<PyramidGamePage>
   }) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: compact ? 10 : 12,
-        vertical: compact ? 7 : 8,
+        horizontal: compact ? 8 : 12,
+        vertical: compact ? 6 : 8,
       ),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: Colors.white.withValues(alpha: compact ? 0.045 : 0.06),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: _gameGold.withValues(alpha: 0.14)),
+        border: Border.all(
+          color: _gameGold.withValues(alpha: compact ? 0.1 : 0.14),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: compact ? 13 : 14, color: _gameGold),
+          Icon(
+            icon,
+            size: compact ? 11 : 14,
+            color: _gameGold.withValues(alpha: compact ? 0.84 : 1),
+          ),
           SizedBox(width: compact ? 5 : 6),
           Text(
             text,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: _gameText,
+              color: compact ? _gameText.withValues(alpha: 0.9) : _gameText,
               fontWeight: FontWeight.w700,
-              fontSize: compact ? 11 : null,
+              fontSize: compact ? 10 : null,
             ),
           ),
         ],
@@ -1366,7 +2008,7 @@ class _PyramidGamePageState extends State<PyramidGamePage>
     return Container(
       padding: EdgeInsets.fromLTRB(
         compact ? 10 : 14,
-        compact ? 12 : 14,
+        compact ? 8 : 14,
         compact ? 10 : 14,
         compact ? 12 : 14,
       ),
@@ -1391,7 +2033,13 @@ class _PyramidGamePageState extends State<PyramidGamePage>
         backgroundColor: Colors.transparent,
         foregroundColor: _gameGold,
         surfaceTintColor: Colors.transparent,
-        title: Text(PyramidPokerStrings.get('gameTitle')),
+        title: Text(
+          PyramidPokerStrings.get('gameTitle'),
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            color: _gameGold,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -1434,11 +2082,13 @@ class _PyramidGamePageState extends State<PyramidGamePage>
                     ),
                   ),
                 ),
-                Center(
+                _buildGameBackgroundDecor(),
+                Align(
+                  alignment: Alignment.topCenter,
                   child: SingleChildScrollView(
                     padding: EdgeInsets.fromLTRB(
                       isCompact ? 10 : 12,
-                      isCompact ? 12 : 18,
+                      isCompact ? 6 : 18,
                       isCompact ? 10 : 12,
                       18,
                     ),
@@ -1450,15 +2100,20 @@ class _PyramidGamePageState extends State<PyramidGamePage>
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           if (isCompact) ...[
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(child: _buildCompactSettingsNote()),
+                                const SizedBox(width: 10),
+                                _buildCompactDeckPile(),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
                             _buildTablePanel(
                               compact: true,
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _buildCompactDeckHeader(),
-                                  const SizedBox(height: 14),
-                                  _buildCompactGameStage(),
-                                ],
+                                children: [_buildCompactGameStage()],
                               ),
                             ),
                           ] else ...[
