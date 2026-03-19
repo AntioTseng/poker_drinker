@@ -1767,26 +1767,122 @@ class _PyramidGamePageState extends State<PyramidGamePage>
       child: Stack(
         children: [
           Positioned(
-            right: -42,
-            top: -18,
-            child: Container(
-              width: 160,
-              height: 160,
-              decoration: BoxDecoration(
-                color: _gameGold.withValues(alpha: 0.05),
-                shape: BoxShape.circle,
+            right: -54,
+            top: -26,
+            child: SizedBox(
+              width: 184,
+              height: 184,
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: _gameGold.withValues(alpha: 0.05),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Positioned(
+                    left: 18,
+                    top: 18,
+                    child: Container(
+                      width: 132,
+                      height: 132,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _gameGold.withValues(alpha: 0.09),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 44,
+                    bottom: 30,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: _gameGold.withValues(alpha: 0.14),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
           Positioned(
-            left: -54,
-            top: 220,
-            child: Container(
-              width: 116,
-              height: 116,
-              decoration: BoxDecoration(
-                color: _gameGold.withValues(alpha: 0.03),
-                shape: BoxShape.circle,
+            left: -68,
+            top: 238,
+            child: SizedBox(
+              width: 136,
+              height: 136,
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: _gameGold.withValues(alpha: 0.025),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Positioned(
+                    left: 20,
+                    top: 20,
+                    child: Container(
+                      width: 92,
+                      height: 92,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _gameGold.withValues(alpha: 0.06),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            left: -38,
+            bottom: 54,
+            child: SizedBox(
+              width: 158,
+              height: 158,
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: _gameGold.withValues(alpha: 0.045),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Positioned(
+                    left: 16,
+                    top: 22,
+                    child: Container(
+                      width: 118,
+                      height: 118,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _gameGold.withValues(alpha: 0.085),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 16,
+                    top: 20,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: _gameGold.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -2019,7 +2115,7 @@ class _PyramidGamePageState extends State<PyramidGamePage>
           colors: [_gamePanelTop, _gamePanelBottom],
         ),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: _gameGold.withValues(alpha: 0.14)),
+        border: Border.all(color: _gameGold.withValues(alpha: 0.24)),
       ),
       child: child,
     );

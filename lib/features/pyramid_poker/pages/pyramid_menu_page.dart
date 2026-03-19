@@ -7,8 +7,8 @@ import '../resources/strings.dart';
 import 'pyramid_game_page.dart';
 import 'pyramid_settings_page.dart';
 
-const _menuTop = Color(0xFF12070C);
-const _menuBottom = Color(0xFF32101A);
+const _menuTop = Color(0xFF14080D);
+const _menuBottom = Color(0xFF34111A);
 const _menuGold = Color(0xFFE8C98D);
 const _menuText = Color(0xFFF8EEDA);
 const _menuMuted = Color(0xFFD8BE93);
@@ -121,7 +121,7 @@ class _PyramidMenuPageState extends State<PyramidMenuPage> {
             elevation: 0,
             title: Text(
               PyramidPokerStrings.get('menuTitle'),
-              style: textTheme.titleMedium?.copyWith(
+              style: textTheme.headlineSmall?.copyWith(
                 color: _menuGold,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.9,
@@ -236,30 +236,7 @@ class _GameLaunchCoverPageState extends State<_GameLaunchCoverPage> {
         ),
         child: Stack(
           children: [
-            Positioned(
-              top: -80,
-              right: -50,
-              child: Container(
-                width: 220,
-                height: 220,
-                decoration: BoxDecoration(
-                  color: _menuGold.withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Positioned(
-              left: -70,
-              bottom: -30,
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF8C2741).withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
+            const _MenuBackgroundDecor(),
             SafeArea(
               child: Center(
                 child: Padding(
@@ -364,6 +341,128 @@ class _GameLaunchCoverPageState extends State<_GameLaunchCoverPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MenuBackgroundDecor extends StatelessWidget {
+  const _MenuBackgroundDecor();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          Positioned(
+            top: -88,
+            right: -54,
+            child: SizedBox(
+              width: 236,
+              height: 236,
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: _menuGold.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Positioned(
+                    left: 24,
+                    top: 22,
+                    child: Container(
+                      width: 170,
+                      height: 170,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _menuGold.withValues(alpha: 0.08),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            left: -78,
+            top: 280,
+            child: SizedBox(
+              width: 150,
+              height: 150,
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: _menuGold.withValues(alpha: 0.028),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Positioned(
+                    left: 22,
+                    top: 22,
+                    child: Container(
+                      width: 102,
+                      height: 102,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _menuGold.withValues(alpha: 0.05),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            right: -36,
+            bottom: 132,
+            child: SizedBox(
+              width: 132,
+              height: 132,
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: _menuGold.withValues(alpha: 0.035),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Positioned(
+                    left: 18,
+                    top: 18,
+                    child: Container(
+                      width: 92,
+                      height: 92,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _menuGold.withValues(alpha: 0.055),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            left: 28,
+            bottom: 118,
+            child: Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: _menuGold.withValues(alpha: 0.16),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

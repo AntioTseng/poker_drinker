@@ -34,7 +34,7 @@ class AppSettingsPage extends StatelessWidget {
         elevation: 0,
         title: Text(
           PyramidPokerStrings.get('appSettingsTitle'),
-          style: textTheme.titleMedium?.copyWith(
+          style: textTheme.headlineSmall?.copyWith(
             color: _settingsGold,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.9,
@@ -99,7 +99,7 @@ class AppSettingsPage extends StatelessWidget {
                             ),
                             title: const Text('Main Menu Demo'),
                             subtitle: Text(
-                              'Compare five production-ready main menu directions',
+                              'Compare three crest-header brand directions',
                               style: textTheme.bodySmall?.copyWith(
                                 color: _settingsMuted,
                               ),
