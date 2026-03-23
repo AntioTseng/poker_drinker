@@ -7,40 +7,52 @@ class MainMenuCoverDemoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final concepts = <_BrandConcept>[
-      const _BrandConcept(
-        title: 'Crest Fan',
-        eyebrow: '最接近你提供圖片感覺的一版',
-        summary: '左上直接用三張扇形撲克牌做品牌 icon，搭配穩定的一行字標，最像真正可上線的 app header。',
+    final concepts = <_HomepageConcept>[
+      const _HomepageConcept(
+        title: 'Signature List',
+        eyebrow: '最穩、最容易正式上線的一版',
+        summary: '保留你現在的酒吧牌單感，但把層級收乾淨，讓 header 更像招牌，遊戲卡更像真正的點單入口。',
+        why: '你現在的首頁已經有不錯的品牌基底，真正需要的不是推翻，而是把品牌、資訊與互動順序梳理好。這版最適合先正式落地。',
+        strengths: [
+          '最符合你目前已經建立的酒紅 + 金色品牌語言。',
+          '開發成本最低，能直接從現在的首頁演進。',
+          '使用者一進來就知道要往下選遊戲，不會先被概念吸走。',
+        ],
+        tradeoffs: ['驚喜感不如更大膽的重排版型。', '如果未來遊戲數量快速增加，還是要再調整列表資訊密度。'],
+        variant: _HomepageVariant.signatureList,
+      ),
+      const _HomepageConcept(
+        title: 'Equal Grid',
+        eyebrow: '四款遊戲平權、選局效率最高的一版',
+        summary: '把首頁做成更像酒吧 menu 的 2x2 主選單，每款遊戲第一屏就能看到，最適合你接下來把四款遊戲都補齊。',
+        why: '既然你不想要「今晚主打」，那首頁最佳策略就是讓四款遊戲公平出場，使用者一眼比較人數、節奏與玩法，再決定今晚要開哪一局。',
+        strengths: [
+          '最適合四個遊戲都存在的產品結構。',
+          '首屏即可完成比較，決策速度最快。',
+          '視覺上更像真正的酒局選單，而不是內容導流頁。',
+        ],
+        tradeoffs: ['如果卡片資訊放太多，容易變擁擠。', '需要更嚴格控制字級與文案長度，否則手機版容易失衡。'],
+        variant: _HomepageVariant.equalGrid,
+      ),
+      const _HomepageConcept(
+        title: 'Neon Stage',
+        eyebrow: '品牌戲劇性最強的一版',
+        summary: '把首頁做成像夜店門口的電子牌板，上方招牌更有表演性，下方遊戲像今晚節目單，品牌記憶點最強。',
         why:
-            '你已經明確喜歡 crest header，而且指定要三張撲克牌圖像。這版最直覺、辨識最快，也最符合使用者對首頁左上品牌區的閱讀習慣。',
-        strengths: ['三張牌 icon 最清楚。', '品牌辨識速度最快。', '最容易正式套回現有首頁。'],
-        tradeoffs: ['視覺驚喜感比更設計化的版本低一些。', '需要靠細節比例做精緻度。'],
-        variant: _BrandVariant.crestFan,
-      ),
-      const _BrandConcept(
-        title: 'Crest Emblem',
-        eyebrow: '最像完整品牌徽章系統的一版',
-        summary: '把三張撲克牌收進一個金色 emblem 裡，再搭配更高級的字標比例，品牌系統感最完整。',
-        why: '如果你希望未來不只首頁，連 loading、活動頁、icon 都能共用同一套識別，這版會是最好的基底。',
-        strengths: ['品牌系統感最完整。', '未來延展性最好。', '看起來最像正式識別設計。'],
-        tradeoffs: ['比起直接扇形牌 icon，辨識速度稍慢。', '如果 emblem 太重，畫面會顯得正式。'],
-        variant: _BrandVariant.crestEmblem,
-      ),
-      const _BrandConcept(
-        title: 'Crest Banner',
-        eyebrow: '最有夜店招牌與酒吧牌桌感的一版',
-        summary: '三張撲克牌 icon 保留，但整體做成更像招牌 banner 的 header，品牌個性最強。',
-        why: '如果你希望首頁一打開就有更明顯的夜生活和酒局感，這版會比純穩定字標更有表演性，也更貼近 Golden Curtain。',
-        strengths: ['舞台感最強。', '最有夜生活品牌氣質。', '和 Golden Curtain 背景連動最好。'],
-        tradeoffs: ['如果控制不好，容易太像活動頁。', '比另外兩版更依賴整頁風格一致。'],
-        variant: _BrandVariant.crestBanner,
+            '如果你想把 POKER DRINKER 做得更像一個有夜生活氣味的品牌，而不是單純的小遊戲集合，這版最能把酒吧、牌桌、夜店感整合起來。',
+        strengths: [
+          '品牌個性最強，最容易讓人留下印象。',
+          '和你現在的霓虹招牌 header 方向最一致。',
+          '未來很適合延伸到活動頁、節日主題頁或 loading 畫面。',
+        ],
+        tradeoffs: ['最容易搶走遊戲卡本身的注意力。', '如果全頁節奏控制不好，會比其他版本更像活動頁。'],
+        variant: _HomepageVariant.neonStage,
       ),
     ];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Brand Title Demo'),
+        title: const Text('Homepage Demo'),
         backgroundColor: AppTheme.pageBackground,
         foregroundColor: AppTheme.ink,
         surfaceTintColor: Colors.transparent,
@@ -59,7 +71,7 @@ class MainMenuCoverDemoPage extends StatelessWidget {
           separatorBuilder: (_, __) => const SizedBox(height: 18),
           itemBuilder: (context, index) {
             if (index == 0) {
-              return const _BrandIntroPanel();
+              return const _IntroPanel();
             }
 
             return _ConceptSection(concept: concepts[index - 1]);
@@ -70,18 +82,18 @@ class MainMenuCoverDemoPage extends StatelessWidget {
   }
 }
 
-enum _BrandVariant { crestFan, crestEmblem, crestBanner }
+enum _HomepageVariant { signatureList, equalGrid, neonStage }
 
-class _BrandConcept {
+class _HomepageConcept {
   final String title;
   final String eyebrow;
   final String summary;
   final String why;
   final List<String> strengths;
   final List<String> tradeoffs;
-  final _BrandVariant variant;
+  final _HomepageVariant variant;
 
-  const _BrandConcept({
+  const _HomepageConcept({
     required this.title,
     required this.eyebrow,
     required this.summary,
@@ -92,8 +104,8 @@ class _BrandConcept {
   });
 }
 
-class _BrandIntroPanel extends StatelessWidget {
-  const _BrandIntroPanel();
+class _IntroPanel extends StatelessWidget {
+  const _IntroPanel();
 
   @override
   Widget build(BuildContext context) {
@@ -120,12 +132,12 @@ class _BrandIntroPanel extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '你現在的 POKER DRINKER 太普通，根本原因是它還只是「標題」，不是「品牌字標」。',
+              '這三版不是單純換皮，而是依照你現在的產品背景重新定義首頁任務。',
               style: textTheme.headlineSmall?.copyWith(color: AppTheme.ink),
             ),
             const SizedBox(height: 10),
             Text(
-              '這次不再比較不同字標策略，而是專門深挖你選的 crest header。重點放在三件事：三張撲克牌 icon 要怎麼做才像品牌而不是素材、文字怎麼和酒吧牌桌主題對上，以及整個左上角 header 怎麼兼顧辨識度與使用者閱讀效率。',
+              '我根據你目前已經確定的方向來提案：POKER DRINKER 是朋友局撲克牌喝酒遊戲、視覺要有深酒紅與金色的牌桌酒吧氣味、首頁不需要主打推薦、而是要在四個遊戲都存在的前提下，讓使用者快速選今晚要開哪一局。下面三版的差異，不在美術風格本身，而在「首頁到底要怎麼幫人做決策」。',
               style: textTheme.bodyMedium?.copyWith(
                 color: AppTheme.subtleInk,
                 height: 1.55,
@@ -139,7 +151,7 @@ class _BrandIntroPanel extends StatelessWidget {
 }
 
 class _ConceptSection extends StatelessWidget {
-  final _BrandConcept concept;
+  final _HomepageConcept concept;
 
   const _ConceptSection({required this.concept});
 
@@ -192,7 +204,7 @@ class _ConceptSection extends StatelessWidget {
               aspectRatio: 0.54,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(24),
-                child: _BrandPreview(variant: concept.variant),
+                child: _HomepagePreview(variant: concept.variant),
               ),
             ),
             const SizedBox(height: 16),
@@ -322,30 +334,34 @@ class _BulletCard extends StatelessWidget {
   }
 }
 
-class _BrandPreview extends StatelessWidget {
-  final _BrandVariant variant;
+class _HomepagePreview extends StatelessWidget {
+  final _HomepageVariant variant;
 
-  const _BrandPreview({required this.variant});
+  const _HomepagePreview({required this.variant});
 
   @override
   Widget build(BuildContext context) {
-    return _GoldenCurtainShell(
+    return _NightShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _BrandHeader(variant: variant),
-          const SizedBox(height: 16),
-          const _PreviewContent(),
+          _PreviewHeader(variant: variant),
+          const SizedBox(height: 14),
+          switch (variant) {
+            _HomepageVariant.signatureList => const _SignatureListPreview(),
+            _HomepageVariant.equalGrid => const _EqualGridPreview(),
+            _HomepageVariant.neonStage => const _NeonStagePreview(),
+          },
         ],
       ),
     );
   }
 }
 
-class _GoldenCurtainShell extends StatelessWidget {
+class _NightShell extends StatelessWidget {
   final Widget child;
 
-  const _GoldenCurtainShell({required this.child});
+  const _NightShell({required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -361,7 +377,7 @@ class _GoldenCurtainShell extends StatelessWidget {
         children: [
           const Positioned.fill(child: _CurtainGlow(accent: Color(0xFFF0CD8D))),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
             child: child,
           ),
         ],
@@ -370,163 +386,710 @@ class _GoldenCurtainShell extends StatelessWidget {
   }
 }
 
-class _BrandHeader extends StatelessWidget {
-  final _BrandVariant variant;
+class _PreviewHeader extends StatelessWidget {
+  final _HomepageVariant variant;
 
-  const _BrandHeader({required this.variant});
+  const _PreviewHeader({required this.variant});
 
   @override
   Widget build(BuildContext context) {
     switch (variant) {
-      case _BrandVariant.crestFan:
-        return const _CrestFanHeader();
-      case _BrandVariant.crestEmblem:
-        return const _CrestEmblemHeader();
-      case _BrandVariant.crestBanner:
-        return const _CrestBannerHeader();
+      case _HomepageVariant.signatureList:
+        return const _SignboardHeader(mode: _HeaderMode.refined);
+      case _HomepageVariant.equalGrid:
+        return const _SignboardHeader(mode: _HeaderMode.compact);
+      case _HomepageVariant.neonStage:
+        return const _SignboardHeader(mode: _HeaderMode.neon);
     }
   }
 }
 
-class _CrestFanHeader extends StatelessWidget {
-  const _CrestFanHeader();
+enum _HeaderMode { refined, compact, neon }
+
+class _SignboardHeader extends StatelessWidget {
+  final _HeaderMode mode;
+
+  const _SignboardHeader({required this.mode});
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Row(
-      children: [
-        const _PlayingCardsMark(),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'POKER DRINKER',
-                style: textTheme.titleLarge?.copyWith(
-                  color: const Color(0xFFFFE3B1),
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.1,
-                ),
-              ),
-              Text(
-                '今晚這桌，先暖場再進主桌',
-                style: textTheme.labelSmall?.copyWith(
-                  color: const Color(0xFFF0CD8D).withValues(alpha: 0.78),
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const Icon(Icons.settings_rounded, color: Color(0xFFF0CD8D), size: 20),
-      ],
-    );
-  }
-}
+    final isNeon = mode == _HeaderMode.neon;
+    final isCompact = mode == _HeaderMode.compact;
 
-class _CrestEmblemHeader extends StatelessWidget {
-  const _CrestEmblemHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Row(
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: const Color(0x22F0CD8D),
-            shape: BoxShape.circle,
-            border: Border.all(color: const Color(0x55F0CD8D)),
-          ),
-          child: const Center(
-            child: SizedBox(
-              width: 34,
-              height: 28,
-              child: _PlayingCardsMark(compact: true),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'POKER DRINKER',
-                style: textTheme.titleLarge?.copyWith(
-                  color: const Color(0xFFFFE3B1),
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.0,
-                ),
-              ),
-              Text(
-                '喝酒、玩牌、把整桌氣氛一路推上去',
-                style: textTheme.labelSmall?.copyWith(
-                  color: const Color(0xFFF0CD8D).withValues(alpha: 0.78),
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.35,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const Icon(Icons.settings_rounded, color: Color(0xFFF0CD8D), size: 20),
-      ],
-    );
-  }
-}
-
-class _CrestBannerHeader extends StatelessWidget {
-  const _CrestBannerHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
+      padding: EdgeInsets.fromLTRB(
+        isCompact ? 12 : 14,
+        isCompact ? 10 : 12,
+        isCompact ? 12 : 14,
+        isCompact ? 10 : 12,
+      ),
       decoration: BoxDecoration(
-        color: const Color(0x33E8C98D),
-        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isNeon
+              ? const [Color(0xFF3D1322), Color(0xFF15070D)]
+              : const [Color(0xFF34111A), Color(0xFF17080D)],
+        ),
+        borderRadius: BorderRadius.circular(isCompact ? 20 : 22),
         border: Border.all(color: const Color(0x66F0CD8D)),
+        boxShadow: [
+          if (isNeon)
+            const BoxShadow(
+              color: Color(0x30F0CD8D),
+              blurRadius: 24,
+              spreadRadius: 1,
+            ),
+          const BoxShadow(
+            color: Color(0x30000000),
+            blurRadius: 24,
+            offset: Offset(0, 12),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          const _PlayingCardsMark(),
-          const SizedBox(width: 8),
+          _PlayingCardsMark(compact: isCompact),
+          SizedBox(width: isCompact ? 10 : 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (!isCompact)
+                  Text(
+                    '今晚的牌局',
+                    style: textTheme.labelSmall?.copyWith(
+                      color: const Color(0xFFF0CD8D).withValues(alpha: 0.82),
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                if (!isCompact) const SizedBox(height: 3),
                 Text(
                   'POKER DRINKER',
-                  style: textTheme.titleLarge?.copyWith(
-                    color: const Color(0xFFFFE3B1),
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.3,
-                  ),
+                  style:
+                      (isCompact
+                              ? textTheme.titleLarge
+                              : textTheme.headlineSmall)
+                          ?.copyWith(
+                            color: const Color(0xFFFFE3B1),
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: isCompact ? 1.0 : 1.2,
+                            height: 0.96,
+                            shadows: isNeon
+                                ? const [
+                                    Shadow(
+                                      color: Color(0x55F0CD8D),
+                                      blurRadius: 14,
+                                    ),
+                                  ]
+                                : null,
+                          ),
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  '今晚開哪一局，決定這桌喝到哪裡',
-                  style: textTheme.labelSmall?.copyWith(
+                  isCompact ? '今晚選一局，馬上開桌' : '朋友局最順手的撲克牌喝酒遊戲',
+                  style: textTheme.bodySmall?.copyWith(
                     color: const Color(0xFFF0CD8D).withValues(alpha: 0.82),
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
+                    height: 1.25,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(
-            Icons.settings_rounded,
-            color: Color(0xFFF0CD8D),
-            size: 18,
+          Container(
+            width: isCompact ? 34 : 38,
+            height: isCompact ? 34 : 38,
+            decoration: BoxDecoration(
+              color: const Color(0x33E8C98D),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0x66F0CD8D)),
+            ),
+            child: const Icon(
+              Icons.settings_rounded,
+              color: Color(0xFFF0CD8D),
+              size: 18,
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SignatureListPreview extends StatelessWidget {
+  const _SignatureListPreview();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '今晚先開哪一局',
+          style: textTheme.titleMedium?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const _ListTierCard(
+          caption: '先暖場',
+          title: '小酌',
+          accent: Color(0xFFD6A66A),
+          games: [_PreviewGameData('比大小', '規則最直覺，上手最快。', '2-8人')],
+        ),
+        const SizedBox(height: 10),
+        const _ListTierCard(
+          caption: '節奏上來',
+          title: '微醺',
+          accent: Color(0xFFD88E7C),
+          games: [_PreviewGameData('撲克牌賽馬', '節奏連續，氣氛升得快。', '3-8人')],
+        ),
+        const SizedBox(height: 10),
+        const _ListTierCard(
+          caption: '主桌時刻',
+          title: '喝掛',
+          accent: Color(0xFFE8C98D),
+          games: [_PreviewGameData('金字塔撲克牌', '主桌核心玩法，張力最高。', '2-6人')],
+          highlighted: true,
+        ),
+      ],
+    );
+  }
+}
+
+class _EqualGridPreview extends StatelessWidget {
+  const _EqualGridPreview();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '今晚開哪一局',
+          style: textTheme.titleMedium?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '先看人數，再決定這桌要暖場、連打，還是直接進主桌。',
+          style: textTheme.bodySmall?.copyWith(
+            color: Colors.white.withValues(alpha: 0.72),
+            height: 1.35,
+          ),
+        ),
+        const SizedBox(height: 10),
+        const Row(
+          children: [
+            Expanded(
+              child: _GridGameCard(
+                title: '比大小',
+                tier: '小酌',
+                players: '2-8人',
+                accent: Color(0xFFD6A66A),
+                meta: '最快開局',
+              ),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: _GridGameCard(
+                title: '撲克牌賽馬',
+                tier: '微醺',
+                players: '3-8人',
+                accent: Color(0xFFD88E7C),
+                meta: '連打升溫',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        const Row(
+          children: [
+            Expanded(
+              child: _GridGameCard(
+                title: '金字塔撲克牌',
+                tier: '喝掛',
+                players: '2-6人',
+                accent: Color(0xFFE8C98D),
+                meta: '主桌核心',
+                highlighted: true,
+              ),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: _GridGameCard(
+                title: '終極懲罰局',
+                tier: '喝掛+',
+                players: '4-10人',
+                accent: Color(0xFFB76A7D),
+                meta: '多人失控',
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _NeonStagePreview extends StatelessWidget {
+  const _NeonStagePreview();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0x33E8C98D), Color(0x122B0D14)],
+            ),
+            border: Border.all(color: const Color(0x55F0CD8D)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'TONIGHT\'S BOARD',
+                style: textTheme.labelLarge?.copyWith(
+                  color: const Color(0xFFE8C98D),
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '今晚這桌從哪裡開始失控',
+                style: textTheme.titleLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        const _StageLineRow(
+          title: '暖場線',
+          accent: Color(0xFFD6A66A),
+          games: ['比大小'],
+        ),
+        const SizedBox(height: 8),
+        const _StageLineRow(
+          title: '升溫線',
+          accent: Color(0xFFD88E7C),
+          games: ['撲克牌賽馬'],
+        ),
+        const SizedBox(height: 8),
+        const _StageLineRow(
+          title: '主桌線',
+          accent: Color(0xFFE8C98D),
+          games: ['金字塔撲克牌', '終極懲罰局'],
+          highlighted: true,
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _NeonInfoChip(
+                label: '2-10 人皆可開桌',
+                accent: const Color(0xFFE8C98D),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _NeonInfoChip(
+                label: '先看節奏，再選懲罰感',
+                accent: const Color(0xFFD88E7C),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _PreviewGameData {
+  final String title;
+  final String summary;
+  final String players;
+
+  const _PreviewGameData(this.title, this.summary, this.players);
+}
+
+class _ListTierCard extends StatelessWidget {
+  final String caption;
+  final String title;
+  final Color accent;
+  final List<_PreviewGameData> games;
+  final bool highlighted;
+
+  const _ListTierCard({
+    required this.caption,
+    required this.title,
+    required this.accent,
+    required this.games,
+    this.highlighted = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accent.withValues(alpha: highlighted ? 0.18 : 0.10),
+            const Color(0xFF2A1015).withValues(alpha: 0.94),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: accent.withValues(alpha: highlighted ? 0.28 : 0.14),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.wine_bar_rounded, size: 12, color: accent),
+              const SizedBox(width: 5),
+              Text(
+                caption,
+                style: textTheme.labelSmall?.copyWith(
+                  color: accent,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                title,
+                style: textTheme.titleSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          for (var index = 0; index < games.length; index++) ...[
+            _PreviewListGameCard(game: games[index], accent: accent),
+            if (index != games.length - 1) const SizedBox(height: 8),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PreviewListGameCard extends StatelessWidget {
+  final _PreviewGameData game;
+  final Color accent;
+
+  const _PreviewListGameCard({required this.game, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withValues(alpha: 0.14)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  game.title,
+                  style: textTheme.titleMedium?.copyWith(
+                    color: const Color(0xFFE8C98D),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  game.summary,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.68),
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  game.players,
+                  style: textTheme.labelSmall?.copyWith(
+                    color: accent,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Icon(
+                Icons.arrow_forward_rounded,
+                color: Color(0xFFE8C98D),
+                size: 16,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GridGameCard extends StatelessWidget {
+  final String title;
+  final String tier;
+  final String players;
+  final String meta;
+  final Color accent;
+  final bool highlighted;
+
+  const _GridGameCard({
+    required this.title,
+    required this.tier,
+    required this.players,
+    required this.meta,
+    required this.accent,
+    this.highlighted = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      height: 136,
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accent.withValues(alpha: highlighted ? 0.18 : 0.10),
+            const Color(0xFF231018),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  tier,
+                  style: textTheme.labelSmall?.copyWith(
+                    color: accent,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.north_east_rounded,
+                color: const Color(0xFFE8C98D).withValues(alpha: 0.92),
+                size: 18,
+              ),
+            ],
+          ),
+          const Spacer(),
+          Text(
+            title,
+            style: textTheme.titleMedium?.copyWith(
+              color: const Color(0xFFFFE3B1),
+              fontWeight: FontWeight.w900,
+              height: 1.08,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            meta,
+            style: textTheme.bodySmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.72),
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            players,
+            style: textTheme.labelSmall?.copyWith(
+              color: accent,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StageLineRow extends StatelessWidget {
+  final String title;
+  final Color accent;
+  final List<String> games;
+  final bool highlighted;
+
+  const _StageLineRow({
+    required this.title,
+    required this.accent,
+    required this.games,
+    this.highlighted = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accent.withValues(alpha: highlighted ? 0.18 : 0.08),
+            const Color(0xFF210E15),
+          ],
+        ),
+        border: Border.all(color: accent.withValues(alpha: 0.22)),
+        boxShadow: [
+          if (highlighted)
+            BoxShadow(
+              color: accent.withValues(alpha: 0.18),
+              blurRadius: 18,
+              spreadRadius: 1,
+            ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 56,
+            child: Text(
+              title,
+              style: textTheme.labelSmall?.copyWith(
+                color: accent,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: games
+                  .map(
+                    (game) => Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0x22000000),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: accent.withValues(alpha: 0.18),
+                        ),
+                      ),
+                      child: Text(
+                        game,
+                        style: textTheme.labelSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NeonInfoChip extends StatelessWidget {
+  final String label;
+  final Color accent;
+
+  const _NeonInfoChip({required this.label, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
+      ),
+      child: Text(
+        label,
+        style: textTheme.labelSmall?.copyWith(
+          color: accent,
+          fontWeight: FontWeight.w800,
+          height: 1.25,
+        ),
       ),
     );
   }
@@ -539,8 +1102,8 @@ class _PlayingCardsMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = compact ? 34.0 : 42.0;
-    final height = compact ? 28.0 : 34.0;
+    final width = compact ? 36.0 : 46.0;
+    final height = compact ? 30.0 : 38.0;
 
     return SizedBox(
       width: width,
@@ -550,35 +1113,35 @@ class _PlayingCardsMark extends StatelessWidget {
         children: [
           Positioned(
             left: 0,
-            top: compact ? 4 : 6,
+            top: compact ? 5 : 7,
             child: Transform.rotate(
               angle: -0.28,
               child: _MiniCard(
                 suit: '♥',
-                width: compact ? 16 : 18,
-                height: compact ? 22 : 24,
+                width: compact ? 16 : 19,
+                height: compact ? 22 : 26,
               ),
             ),
           ),
           Positioned(
-            left: compact ? 9 : 12,
+            left: compact ? 10 : 13,
             top: 0,
             child: _MiniCard(
               suit: '♠',
-              width: compact ? 17 : 19,
-              height: compact ? 23 : 26,
+              width: compact ? 17 : 20,
+              height: compact ? 23 : 28,
               highlighted: true,
             ),
           ),
           Positioned(
             right: 0,
-            top: compact ? 4 : 6,
+            top: compact ? 5 : 7,
             child: Transform.rotate(
               angle: 0.28,
               child: _MiniCard(
                 suit: '♦',
-                width: compact ? 16 : 18,
-                height: compact ? 22 : 24,
+                width: compact ? 16 : 19,
+                height: compact ? 22 : 26,
               ),
             ),
           ),
@@ -606,6 +1169,7 @@ class _MiniCard extends StatelessWidget {
     final foreground = highlighted
         ? const Color(0xFFFFE3B1)
         : const Color(0xFFF0CD8D);
+
     return Container(
       width: width,
       height: height,
@@ -662,172 +1226,6 @@ class _MiniCard extends StatelessWidget {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PreviewContent extends StatelessWidget {
-  const _PreviewContent();
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '今晚主場準備開燈',
-          style: textTheme.labelLarge?.copyWith(
-            color: const Color(0xFFE8C98D),
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          '從暖場進門\n一路走到主桌',
-          style: textTheme.headlineSmall?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w900,
-            height: 0.96,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          '首頁上方的品牌字標，不只是放名字而已。它要先讓玩家一眼感受到這是一個把喝酒、玩牌、帶桌上氣氛一路推進到主桌的 app，接著才自然往下看今晚要開哪一局。',
-          style: textTheme.bodySmall?.copyWith(
-            color: Colors.white.withValues(alpha: 0.74),
-            height: 1.45,
-          ),
-        ),
-        const SizedBox(height: 14),
-        const _TierBlock(
-          title: '小酌',
-          caption: '先暖場',
-          accent: Color(0xFFD6A66A),
-          games: ['比大小', '撲克牌賽馬'],
-        ),
-        const SizedBox(height: 10),
-        const _TierBlock(
-          title: '微醺',
-          caption: '節奏上來',
-          accent: Color(0xFFD88E7C),
-          games: ['微醺模式預留'],
-        ),
-        const SizedBox(height: 10),
-        const _TierBlock(
-          title: '喝掛',
-          caption: '主桌時刻',
-          accent: Color(0xFFE8C98D),
-          games: ['金字塔撲克牌', '喝掛模式預留'],
-          highlighted: true,
-        ),
-      ],
-    );
-  }
-}
-
-class _TierBlock extends StatelessWidget {
-  final String title;
-  final String caption;
-  final Color accent;
-  final List<String> games;
-  final bool highlighted;
-
-  const _TierBlock({
-    required this.title,
-    required this.caption,
-    required this.accent,
-    required this.games,
-    this.highlighted = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            accent.withValues(alpha: highlighted ? 0.18 : 0.10),
-            const Color(0xFF2A1015).withValues(alpha: 0.94),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: accent.withValues(alpha: highlighted ? 0.28 : 0.14),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.wine_bar_rounded, size: 14, color: accent),
-                  const SizedBox(width: 4),
-                  Text(
-                    caption,
-                    style: textTheme.labelSmall?.copyWith(
-                      color: accent,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              Text(
-                title,
-                style: textTheme.titleSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          for (var index = 0; index < games.length; index++) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    games[index],
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: games[index] == '金字塔撲克牌'
-                          ? const Color(0xFFFFE1B0)
-                          : Colors.white.withValues(alpha: 0.82),
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    games[index] == '喝掛模式預留' ? '4-10人' : '2-6人',
-                    style: textTheme.labelSmall?.copyWith(
-                      color: accent,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (index != games.length - 1) const SizedBox(height: 8),
-          ],
         ],
       ),
     );

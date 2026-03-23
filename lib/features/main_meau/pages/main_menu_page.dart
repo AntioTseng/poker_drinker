@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_theme.dart';
 import '../../pyramid_poker/pages/pyramid_menu_page.dart';
 import '../../pyramid_poker/resources/strings.dart';
 import '../../settings/pages/app_settings_page.dart';
@@ -9,63 +10,71 @@ const _pageBackgroundTop = Color(0xFF14080D);
 const _pageBackgroundBottom = Color(0xFF3A131C);
 const _goldAccent = Color(0xFFE8C98D);
 
-String _localizedCopy(
-  BuildContext context, {
-  required String zh,
-  required String en,
-}) {
-  return zh;
-}
-
-String _sectionCaption(BuildContext context, String levelKey) {
+String _sectionCaption(String levelKey) {
   switch (levelKey) {
     case 'gameLevelStarter':
-      return _localizedCopy(context, zh: '先暖場', en: '先暖場');
+      return PyramidPokerStrings.get('mainMenuSectionStarterCaption');
     case 'gameLevelClassic':
-      return _localizedCopy(context, zh: '節奏上來', en: '節奏上來');
+      return PyramidPokerStrings.get('mainMenuSectionClassicCaption');
     default:
-      return _localizedCopy(context, zh: '主桌時刻', en: '主桌時刻');
+      return PyramidPokerStrings.get('mainMenuSectionChallengeCaption');
   }
 }
 
-String _homePlayerCountLabel(BuildContext context, String playerCountKey) {
-  switch (playerCountKey) {
-    case 'gameComparePlayers':
-      return _localizedCopy(context, zh: '2-6人', en: '2-6人');
-    case 'gameHorseRacePlayers':
-      return _localizedCopy(context, zh: '2-6人', en: '2-6人');
-    case 'gameClassicReservedPlayers':
-      return _localizedCopy(context, zh: '2-6人', en: '2-6人');
-    case 'gamePyramidPlayers':
-      return _localizedCopy(context, zh: '2-6人', en: '2-6人');
-    case 'gameChallengeReservedPlayers':
-      return _localizedCopy(context, zh: '4-10人', en: '4-10人');
-    default:
-      return PyramidPokerStrings.get(playerCountKey);
-  }
-}
-
-String _sectionSupportCopy(BuildContext context, String levelKey) {
-  switch (levelKey) {
-    case 'gameLevelStarter':
-      return _localizedCopy(context, zh: '先讓全桌進到同一個節奏。', en: '先讓全桌進到同一個節奏。');
-    case 'gameLevelClassic':
-      return _localizedCopy(context, zh: '把場子從暖場推到主桌前。', en: '把場子從暖場推到主桌前。');
-    default:
-      return _localizedCopy(context, zh: '今晚最重的玩法都在這裡。', en: '今晚最重的玩法都在這裡。');
-  }
-}
-
-String _gameSummaryCopy(BuildContext context, String titleKey) {
+/// 依據遊戲 key 回傳估算的遊玩時間字串（i18n key）
+String _homeGameDurationLabel(String titleKey) {
   switch (titleKey) {
     case 'gameCompareTitle':
-      return _localizedCopy(context, zh: '規則直覺，開局最快。', en: '規則直覺，開局最快。');
+      // 比大小：規則最簡單，1 局約 3-5 分鐘
+      return PyramidPokerStrings.get('gameCompareDuration');
     case 'gameHorseRaceTitle':
-      return _localizedCopy(context, zh: '節奏連續，氣氛升得快。', en: '節奏連續，氣氛升得快。');
+      // 賽馬：節奏快，1 局約 5-8 分鐘
+      return PyramidPokerStrings.get('gameHorseRaceDuration');
     case 'gameTitle':
-      return _localizedCopy(context, zh: '主桌核心玩法，張力最高。', en: '主桌核心玩法，張力最高。');
+      // 金字塔撲克牌：流程較長，1 局約 10-15 分鐘
+      return PyramidPokerStrings.get('gamePyramidDuration');
     case 'gameChallengeReservedTitle':
-      return _localizedCopy(context, zh: '保留給之後的重口味玩法。', en: '保留給之後的重口味玩法。');
+      // 預留挑戰模式，暫估 12-20 分鐘
+      return PyramidPokerStrings.get('gameChallengeReservedDuration');
+    default:
+      return '';
+  }
+}
+
+String _sectionSupportCopy(String levelKey) {
+  switch (levelKey) {
+    case 'gameLevelStarter':
+      return PyramidPokerStrings.get('mainMenuSectionStarterSupport');
+    case 'gameLevelClassic':
+      return PyramidPokerStrings.get('mainMenuSectionClassicSupport');
+    default:
+      return PyramidPokerStrings.get('mainMenuSectionChallengeSupport');
+  }
+}
+
+String _gameSummaryCopy(String titleKey) {
+  switch (titleKey) {
+    case 'gameCompareTitle':
+      return PyramidPokerStrings.get('gameCompareSubtitle');
+    case 'gameHorseRaceTitle':
+      return PyramidPokerStrings.get('gameHorseRaceSubtitle');
+    case 'gameTitle':
+      return PyramidPokerStrings.get('gameTitleSubtitle');
+    case 'gameChallengeReservedTitle':
+      return PyramidPokerStrings.get('gameChallengeReservedSubtitle');
+    default:
+      return '';
+  }
+}
+
+String _gameMetaCopy(String titleKey) {
+  switch (titleKey) {
+    case 'gameCompareTitle':
+      return PyramidPokerStrings.get('gameCompareMeta');
+    case 'gameHorseRaceTitle':
+      return PyramidPokerStrings.get('gameHorseRaceMeta');
+    case 'gameTitle':
+      return PyramidPokerStrings.get('gameTitleMeta');
     default:
       return '';
   }
@@ -149,11 +158,36 @@ _SectionStyle _styleForLevel(String levelKey) {
   }
 }
 
+IconData _sectionIconForLevel(String levelKey) {
+  switch (levelKey) {
+    case 'gameLevelStarter':
+      return Icons.sports_bar_rounded;
+    case 'gameLevelClassic':
+      return Icons.local_fire_department_rounded;
+    default:
+      return Icons.workspace_premium_rounded;
+  }
+}
+
 class MainMenuPage extends StatelessWidget {
   const MainMenuPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final featuredEntry = _GameEntry(
+      titleKey: 'gameTitle',
+      playerCountKey: 'gamePyramidPlayers',
+      featured: true,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (context) => const PyramidMenuPage(),
+          ),
+        );
+      },
+    );
+
     final sections = <_GameSection>[
       const _GameSection(
         levelKey: 'gameLevelStarter',
@@ -173,28 +207,7 @@ class MainMenuPage extends StatelessWidget {
           ),
         ],
       ),
-      _GameSection(
-        levelKey: 'gameLevelChallenge',
-        entries: [
-          _GameEntry(
-            titleKey: 'gameTitle',
-            playerCountKey: 'gamePyramidPlayers',
-            featured: true,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (context) => const PyramidMenuPage(),
-                ),
-              );
-            },
-          ),
-          const _GameEntry(
-            titleKey: 'gameChallengeReservedTitle',
-            playerCountKey: 'gameChallengeReservedPlayers',
-          ),
-        ],
-      ),
+      _GameSection(levelKey: 'gameLevelChallenge', entries: [featuredEntry]),
     ];
 
     return Scaffold(
@@ -214,29 +227,27 @@ class MainMenuPage extends StatelessWidget {
               Align(
                 alignment: Alignment.topCenter,
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 420),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _MainMenuHeaderRow(
-                          onSettingsTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute<void>(
-                                builder: (context) => const AppSettingsPage(),
-                              ),
-                            );
-                          },
-                        ),
+                        const _MainMenuHeaderRow(),
+                        const SizedBox(height: 12),
+                        const _MainMenuIntroBlock(),
                         const SizedBox(height: 8),
-                        const _MainMenuHeroIntro(),
-                        const SizedBox(height: 14),
-                        for (final section in sections) ...[
-                          _GameSectionBlock(section: section),
-                          if (section != sections.last)
-                            const SizedBox(height: 10),
+                        for (
+                          var index = 0;
+                          index < sections.length;
+                          index++
+                        ) ...[
+                          _StaggeredReveal(
+                            delay: Duration(milliseconds: 140 + (index * 120)),
+                            child: _GameSectionBlock(section: sections[index]),
+                          ),
+                          if (index != sections.length - 1)
+                            const SizedBox(height: 8),
                         ],
                       ],
                     ),
@@ -251,123 +262,288 @@ class MainMenuPage extends StatelessWidget {
   }
 }
 
-class _MainMenuBackgroundDecor extends StatelessWidget {
+class _MainMenuBackgroundDecor extends StatefulWidget {
   const _MainMenuBackgroundDecor();
 
   @override
-  Widget build(BuildContext context) {
-    return const IgnorePointer(child: _CurtainGlow(accent: Color(0xFFF0CD8D)));
-  }
+  State<_MainMenuBackgroundDecor> createState() =>
+      _MainMenuBackgroundDecorState();
 }
 
-class _MainMenuHeroIntro extends StatelessWidget {
-  const _MainMenuHeroIntro();
+class _MainMenuBackgroundDecorState extends State<_MainMenuBackgroundDecor>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3600),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final intensity = 0.88 + (_controller.value * 0.12);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _localizedCopy(context, zh: '今晚主場準備開燈', en: '今晚主場準備開燈'),
-          style: textTheme.labelLarge?.copyWith(
-            color: const Color(0xFFE8C98D),
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.2,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          _localizedCopy(context, zh: '從暖場進門\n一路走到主桌', en: '從暖場進門\n一路走到主桌'),
-          style: textTheme.headlineSmall?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w900,
-            height: 0.96,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          _localizedCopy(
-            context,
-            zh: '快速選一局，先暖場，再把整桌一路帶進主桌。',
-            en: '快速選一局，先暖場，再把整桌一路帶進主桌。',
-          ),
-          style: textTheme.bodySmall?.copyWith(
-            color: Colors.white.withValues(alpha: 0.74),
-            height: 1.35,
-          ),
-        ),
-      ],
+          return Opacity(
+            opacity: intensity,
+            child: _CurtainGlow(
+              accent: const Color(0xFFF0CD8D),
+              intensity: intensity,
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
 class _MainMenuHeaderRow extends StatelessWidget {
-  final VoidCallback onSettingsTap;
-
-  const _MainMenuHeaderRow({required this.onSettingsTap});
+  const _MainMenuHeaderRow();
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Expanded(child: _MainMenuBrandHeader()),
-        IconButton(
-          onPressed: onSettingsTap,
-          visualDensity: VisualDensity.compact,
-          splashRadius: 16,
-          padding: const EdgeInsets.all(2),
-          icon: const Icon(
-            Icons.settings_rounded,
-            color: _goldAccent,
-            size: 18,
+    return _MainMenuBrandHeader(
+      onSettingsTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (context) => const AppSettingsPage(),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
 
 class _MainMenuBrandHeader extends StatelessWidget {
-  const _MainMenuBrandHeader();
+  final VoidCallback? onSettingsTap;
+  const _MainMenuBrandHeader({this.onSettingsTap});
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Row(
-      children: [
-        const _PlayingCardsMark(),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF34111A), Color(0xFF17080D)],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0x55F0CD8D)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x30000000),
+            blurRadius: 22,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0x12FFE3B1), Color(0x03FFFFFF)],
+              ),
+              border: Border.all(color: const Color(0x1AFFE3B1)),
+            ),
+          ),
+          Positioned(
+            left: 8,
+            right: 8,
+            top: 0,
+            child: Container(height: 1, color: const Color(0x44FFE3B1)),
+          ),
+          Row(
             children: [
-              Text(
-                'POKER DRINKER',
-                style: textTheme.titleMedium?.copyWith(
-                  color: const Color(0xFFFFE3B1),
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.9,
-                  height: 1,
+              const _PlayingCardsMark(),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'POKER DRINKER',
+                        maxLines: 1,
+                        softWrap: false,
+                        style: textTheme.titleLarge?.copyWith(
+                          color: const Color(0xFFFFE3B1),
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.05,
+                          height: 0.96,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      PyramidPokerStrings.get('mainMenuBrandTagline'),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFFF0CD8D).withValues(alpha: 0.82),
+                        fontWeight: FontWeight.w700,
+                        height: 1.3,
+                        letterSpacing: 0.15,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                '朋友局最順手的撲克牌喝酒遊戲',
-                style: textTheme.labelSmall?.copyWith(
-                  color: const Color(0xFFF0CD8D).withValues(alpha: 0.78),
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
-                ),
+              if (onSettingsTap != null) ...[
+                const SizedBox(width: 10),
+                _AnimatedSettingsButton(onTap: onSettingsTap!),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AnimatedSettingsButton extends StatefulWidget {
+  final VoidCallback onTap;
+  const _AnimatedSettingsButton({required this.onTap});
+
+  @override
+  State<_AnimatedSettingsButton> createState() =>
+      _AnimatedSettingsButtonState();
+}
+
+class _AnimatedSettingsButtonState extends State<_AnimatedSettingsButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final scale = 1 + (_controller.value * 0.08);
+        return Transform.scale(
+          scale: scale,
+          child: IconButton(
+            icon: const Icon(
+              Icons.settings_rounded,
+              color: _goldAccent,
+              size: 24,
+            ),
+            onPressed: widget.onTap,
+            tooltip: '設定',
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _MainMenuIntroBlock extends StatelessWidget {
+  const _MainMenuIntroBlock();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(2, 2, 2, 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            PyramidPokerStrings.get('mainMenuSectionPrompt'),
+            style: textTheme.titleMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            PyramidPokerStrings.get('mainMenuIntroSubtitle'),
+            style: textTheme.bodySmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.72),
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsFloatingButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _SettingsFloatingButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Ink(
+          width: 58,
+          height: 58,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF34111A), Color(0xFF17080D)],
+            ),
+            shape: BoxShape.circle,
+            border: Border.all(color: const Color(0x66F0CD8D)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x30000000),
+                blurRadius: 18,
+                offset: Offset(0, 10),
               ),
             ],
           ),
+          child: const Icon(
+            Icons.settings_rounded,
+            color: _goldAccent,
+            size: 22,
+          ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -378,35 +554,35 @@ class _PlayingCardsMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 38,
-      height: 32,
+      width: 52,
+      height: 42,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           Positioned(
             left: 0,
-            top: 5,
+            top: 8,
             child: Transform.rotate(
               angle: -0.28,
-              child: const _MiniCard(suit: '♥', width: 17, height: 23),
+              child: const _MiniCard(suit: '♥', width: 23, height: 31),
             ),
           ),
           Positioned(
-            left: 11,
+            left: 15,
             top: 0,
             child: const _MiniCard(
               suit: '♠',
-              width: 18,
-              height: 25,
+              width: 24,
+              height: 34,
               highlighted: true,
             ),
           ),
           Positioned(
             right: 0,
-            top: 5,
+            top: 8,
             child: Transform.rotate(
               angle: 0.28,
-              child: const _MiniCard(suit: '♦', width: 17, height: 23),
+              child: const _MiniCard(suit: '♦', width: 23, height: 31),
             ),
           ),
         ],
@@ -465,7 +641,7 @@ class _MiniCard extends StatelessWidget {
                     'A',
                     style: TextStyle(
                       color: foreground,
-                      fontSize: 5.2,
+                      fontSize: highlighted ? 6.4 : 5.8,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -473,7 +649,7 @@ class _MiniCard extends StatelessWidget {
                     suit,
                     style: TextStyle(
                       color: foreground,
-                      fontSize: 5.2,
+                      fontSize: highlighted ? 6.4 : 5.8,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -486,7 +662,7 @@ class _MiniCard extends StatelessWidget {
                   suit,
                   style: TextStyle(
                     color: foreground,
-                    fontSize: highlighted ? 9.5 : 8.5,
+                    fontSize: highlighted ? 12.5 : 11,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -509,60 +685,132 @@ class _GameSectionBlock extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final style = _styleForLevel(section.levelKey);
     final isChallenge = section.levelKey == 'gameLevelChallenge';
+    final isStarter = section.levelKey == 'gameLevelStarter';
+    final isClassic = section.levelKey == 'gameLevelClassic';
+    final sectionShadow = isChallenge
+        ? [
+            BoxShadow(
+              color: style.accent.withValues(alpha: 0.14),
+              blurRadius: 24,
+              spreadRadius: 1,
+              offset: const Offset(0, 8),
+            ),
+            const BoxShadow(
+              color: Color(0x24000000),
+              blurRadius: 18,
+              offset: Offset(0, 10),
+            ),
+          ]
+        : [
+            BoxShadow(
+              color: style.accent.withValues(alpha: isClassic ? 0.08 : 0.05),
+              blurRadius: isClassic ? 16 : 12,
+              offset: const Offset(0, 8),
+            ),
+          ];
 
+    // 決定 emoji 與動畫
+    String emoji = '';
+    switch (section.levelKey) {
+      case 'gameLevelStarter':
+        emoji = '🍻';
+        break;
+      case 'gameLevelClassic':
+        emoji = '🎉';
+        break;
+      case 'gameLevelChallenge':
+        emoji = '🔥';
+        break;
+    }
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            style.accent.withValues(alpha: isChallenge ? 0.18 : 0.10),
+            style.accent.withValues(
+              alpha: isChallenge
+                  ? 0.24
+                  : isClassic
+                  ? 0.14
+                  : 0.09,
+            ),
             const Color(0xFF2A1015).withValues(alpha: 0.94),
           ],
         ),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: style.border.withValues(alpha: isChallenge ? 0.28 : 0.14),
+          color: style.border.withValues(
+            alpha: isChallenge
+                ? 0.34
+                : isClassic
+                ? 0.18
+                : 0.12,
+          ),
         ),
+        boxShadow: sectionShadow,
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+        padding: EdgeInsets.fromLTRB(
+          14,
+          isChallenge ? 16 : 14,
+          14,
+          isStarter ? 13 : 14,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
-                Icon(Icons.wine_bar_rounded, size: 14, color: style.accent),
+                _SectionHeaderBadge(
+                  icon: _sectionIconForLevel(section.levelKey),
+                  style: style,
+                ),
+                const SizedBox(width: 8),
+                _AnimatedEmoji(emoji: emoji),
                 const SizedBox(width: 4),
-                Text(
-                  _sectionCaption(context, section.levelKey),
-                  style: textTheme.labelSmall?.copyWith(
-                    color: style.accent,
-                    fontWeight: FontWeight.w800,
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: Text(
+                    _sectionCaption(section.levelKey),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.labelSmall?.copyWith(
+                      color: style.accent,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
-                const Spacer(),
-                Text(
-                  PyramidPokerStrings.get(section.levelKey),
-                  style: textTheme.titleSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: _GameMetaPill(
+                      label: PyramidPokerStrings.get(section.levelKey),
+                      accent: style.accent,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 6),
             Text(
-              _sectionSupportCopy(context, section.levelKey),
+              _sectionSupportCopy(section.levelKey),
               style: textTheme.bodySmall?.copyWith(
-                color: Colors.white.withValues(alpha: 0.62),
+                color: Colors.white.withValues(
+                  alpha: isChallenge
+                      ? 0.70
+                      : isClassic
+                      ? 0.66
+                      : 0.60,
+                ),
                 height: 1.25,
               ),
             ),
             const SizedBox(height: 10),
             for (final entry in section.entries) ...[
               _GameMenuCard(entry: entry, levelKey: section.levelKey),
-              if (entry != section.entries.last) const SizedBox(height: 8),
+              if (entry != section.entries.last) const SizedBox(height: 4),
             ],
           ],
         ),
@@ -571,21 +819,51 @@ class _GameSectionBlock extends StatelessWidget {
   }
 }
 
-class _CurtainGlow extends StatelessWidget {
-  final Color accent;
+class _SectionHeaderBadge extends StatelessWidget {
+  final IconData icon;
+  final _SectionStyle style;
 
-  const _CurtainGlow({required this.accent});
+  const _SectionHeaderBadge({required this.icon, required this.style});
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(painter: _CurtainGlowPainter(accent));
+    return Container(
+      width: 22,
+      height: 22,
+      decoration: BoxDecoration(
+        color: style.accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(color: style.border.withValues(alpha: 0.36)),
+        boxShadow: [
+          BoxShadow(
+            color: style.accent.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Icon(icon, size: 12, color: style.accent),
+    );
+  }
+}
+
+class _CurtainGlow extends StatelessWidget {
+  final Color accent;
+  final double intensity;
+
+  const _CurtainGlow({required this.accent, this.intensity = 1});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(painter: _CurtainGlowPainter(accent, intensity));
   }
 }
 
 class _CurtainGlowPainter extends CustomPainter {
   final Color accent;
+  final double intensity;
 
-  _CurtainGlowPainter(this.accent);
+  _CurtainGlowPainter(this.accent, this.intensity);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -593,7 +871,10 @@ class _CurtainGlowPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [accent.withValues(alpha: 0.16), Colors.transparent],
+        colors: [
+          accent.withValues(alpha: 0.14 * intensity),
+          Colors.transparent,
+        ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height * 0.6));
 
     final path1 = Path()
@@ -616,7 +897,7 @@ class _CurtainGlowPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _CurtainGlowPainter oldDelegate) {
-    return oldDelegate.accent != accent;
+    return oldDelegate.accent != accent || oldDelegate.intensity != intensity;
   }
 }
 
@@ -632,101 +913,228 @@ class _GameMenuCard extends StatelessWidget {
     final style = _styleForLevel(levelKey);
     final available = entry.isAvailable;
     final accent = style.accent;
-    final isHeadline = entry.titleKey == 'gameTitle';
     final labelColor = const Color(0xFFE8C98D);
-    final metaAccent = accent.withValues(alpha: available ? 1 : 0.52);
-    final summary = _gameSummaryCopy(context, entry.titleKey);
-    final rowFill = Color.alphaBlend(
-      accent.withValues(alpha: available ? 0.08 : 0.04),
-      const Color(0xFF1F0B11),
-    );
-    final rowBorder = accent.withValues(alpha: available ? 0.15 : 0.08);
-    final arrowColor = accent.withValues(alpha: available ? 0.92 : 0.32);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: entry.onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         child: Ink(
           decoration: BoxDecoration(
-            color: rowFill,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: rowBorder),
+            color: Color.alphaBlend(
+              accent.withValues(alpha: available ? 0.08 : 0.03),
+              const Color(0xFF1F0B11),
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: accent.withValues(alpha: 0.10)),
+            boxShadow: [
+              BoxShadow(
+                color: accent.withValues(alpha: 0.04),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              PyramidPokerStrings.get(entry.titleKey),
-                              style: textTheme.titleMedium?.copyWith(
-                                color: labelColor,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 18,
-                                height: 1.1,
-                              ),
-                            ),
-                          ),
-                          if (isHeadline) ...[
-                            const SizedBox(width: 6),
-                            Icon(
-                              Icons.auto_awesome_rounded,
-                              size: 16,
-                              color: accent,
-                            ),
-                          ],
-                        ],
-                      ),
-                      if (summary.isNotEmpty) ...[
-                        const SizedBox(height: 5),
-                        Text(
-                          summary,
-                          style: textTheme.bodySmall?.copyWith(
-                            color: Colors.white.withValues(
-                              alpha: available ? 0.66 : 0.40,
-                            ),
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
-                    ],
+                  child: Text(
+                    PyramidPokerStrings.get(entry.titleKey),
+                    style: textTheme.titleMedium?.copyWith(
+                      color: labelColor,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 17.5,
+                      height: 1.08,
+                      letterSpacing: 0.08,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _PlayerPill(
-                      label: _homePlayerCountLabel(
-                        context,
-                        entry.playerCountKey,
-                      ),
-                      accent: metaAccent,
-                      dimmed: !available,
-                    ),
-                    const SizedBox(height: 10),
-                    Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 18,
-                      color: arrowColor,
-                    ),
-                  ],
+                _PlayerPill(
+                  label: _homeGameDurationLabel(entry.titleKey),
+                  accent: accent,
+                  dimmed: !available,
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _GameMetaPill extends StatelessWidget {
+  final String label;
+  final Color accent;
+
+  const _GameMetaPill({required this.label, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
+      ),
+      child: Text(
+        label,
+        style: textTheme.labelSmall?.copyWith(
+          color: accent,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.15,
+        ),
+      ),
+    );
+  }
+}
+
+class _ArrowBadge extends StatelessWidget {
+  final Color color;
+  final Color accent;
+  final bool highlighted;
+
+  const _ArrowBadge({
+    required this.color,
+    required this.accent,
+    this.highlighted = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: highlighted ? 34 : 32,
+      height: highlighted ? 34 : 32,
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: highlighted ? 0.14 : 0.10),
+        shape: BoxShape.circle,
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: highlighted ? 0.16 : 0.08),
+            blurRadius: highlighted ? 12 : 8,
+            spreadRadius: highlighted ? 0.5 : 0,
+          ),
+        ],
+      ),
+      child: Icon(Icons.arrow_forward_rounded, size: 18, color: color),
+    );
+  }
+}
+
+class _StaggeredReveal extends StatefulWidget {
+  final Widget child;
+  final Duration delay;
+
+  const _StaggeredReveal({required this.child, required this.delay});
+
+  @override
+  State<_StaggeredReveal> createState() => _StaggeredRevealState();
+}
+
+class _StaggeredRevealState extends State<_StaggeredReveal> {
+  Timer? _timer;
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(widget.delay, () {
+      if (mounted) {
+        setState(() {
+          _visible = true;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSlide(
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+      offset: _visible ? Offset.zero : const Offset(0, 0.06),
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 360),
+        curve: Curves.easeOut,
+        opacity: _visible ? 1 : 0,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _FeaturedSparkle extends StatefulWidget {
+  final Color color;
+
+  const _FeaturedSparkle({required this.color});
+
+  @override
+  State<_FeaturedSparkle> createState() => _FeaturedSparkleState();
+}
+
+class _FeaturedSparkleState extends State<_FeaturedSparkle>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final eased = Curves.easeInOut.transform(_controller.value);
+        final scale = 1 + (eased * 0.14);
+        final glow = 4 + (eased * 8);
+
+        return Transform.scale(
+          scale: scale,
+          child: Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: widget.color.withValues(alpha: 0.18 + (eased * 0.16)),
+                  blurRadius: glow,
+                  spreadRadius: eased * 0.6,
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.auto_awesome_rounded,
+              size: 16,
+              color: widget.color.withValues(alpha: 0.84 + (eased * 0.16)),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -747,18 +1155,67 @@ class _PlayerPill extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: accent.withValues(alpha: 0.16)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: dimmed ? 0.03 : 0.08),
+            blurRadius: 8,
+          ),
+        ],
       ),
       child: Text(
         label,
         style: textTheme.labelSmall?.copyWith(
           color: accent.withValues(alpha: dimmed ? 0.7 : 1),
           fontWeight: FontWeight.w800,
+          letterSpacing: 0.15,
         ),
       ),
+    );
+  }
+}
+
+// 微動 emoji
+class _AnimatedEmoji extends StatefulWidget {
+  final String emoji;
+  const _AnimatedEmoji({required this.emoji});
+  @override
+  State<_AnimatedEmoji> createState() => _AnimatedEmojiState();
+}
+
+class _AnimatedEmojiState extends State<_AnimatedEmoji>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final scale = 1 + (_controller.value * 0.13);
+        return Transform.scale(
+          scale: scale,
+          child: Text(widget.emoji, style: const TextStyle(fontSize: 18)),
+        );
+      },
     );
   }
 }

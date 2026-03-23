@@ -99,7 +99,7 @@ class AppSettingsPage extends StatelessWidget {
                             ),
                             title: const Text('Main Menu Demo'),
                             subtitle: Text(
-                              'Compare three crest-header brand directions',
+                              'Compare three homepage optimization directions',
                               style: textTheme.bodySmall?.copyWith(
                                 color: _settingsMuted,
                               ),

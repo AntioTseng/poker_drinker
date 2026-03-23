@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:upgrader/upgrader.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/i18n/app_locale.dart';
 import 'features/main_meau/pages/main_menu_page.dart';
 import 'features/pyramid_poker/resources/strings.dart';
+import 'core/update/update_service.dart';
 
 const _launchTop = Color(0xFF11070C);
 const _launchBottom = Color(0xFF32101A);
@@ -23,6 +25,16 @@ class GameApp extends StatefulWidget {
 
 class _GameAppState extends State<GameApp> {
   @override
+  void initState() {
+    super.initState();
+    // Trigger Android in-app update check after first frame to ensure context/activity is ready.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      UpdateService.logLocalVersion();
+      UpdateService.checkAndPerformAndroidInAppUpdate();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<String>(
       valueListenable: AppLocale.code,
@@ -41,13 +53,15 @@ class _GameAppState extends State<GameApp> {
               );
             }
 
-            return MaterialApp(
-              title: PyramidPokerStrings.get('appTitle'),
-              locale: Locale(localeCode),
-              theme: AppTheme.lightTheme,
-              themeAnimationDuration: Duration.zero,
-              home: const MainMenuPage(),
-              debugShowCheckedModeBanner: false,
+            return UpgradeAlert(
+              child: MaterialApp(
+                title: PyramidPokerStrings.get('appTitle'),
+                locale: Locale(localeCode),
+                theme: AppTheme.lightTheme,
+                themeAnimationDuration: Duration.zero,
+                home: const MainMenuPage(),
+                debugShowCheckedModeBanner: false,
+              ),
             );
           },
         );
